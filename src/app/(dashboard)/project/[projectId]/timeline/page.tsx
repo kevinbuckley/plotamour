@@ -1,5 +1,8 @@
 import { getProject, getFirstBookId } from "@/lib/services/projects";
 import { getTimelineData } from "@/lib/services/timeline";
+import { getCharacters } from "@/lib/services/characters";
+import { getPlaces } from "@/lib/services/places";
+import { getTags } from "@/lib/services/tags";
 import { TimelineGrid } from "@/components/timeline/timeline-grid";
 import { redirect } from "next/navigation";
 
@@ -19,7 +22,12 @@ export default async function TimelinePage({
   const bookId = bookIdParam ?? (await getFirstBookId(projectId));
   if (!bookId) redirect("/projects");
 
-  const timeline = await getTimelineData(bookId);
+  const [timeline, characters, places, tags] = await Promise.all([
+    getTimelineData(bookId),
+    getCharacters(projectId),
+    getPlaces(projectId),
+    getTags(projectId),
+  ]);
 
   return (
     <div className="flex h-full flex-col">
@@ -36,6 +44,9 @@ export default async function TimelinePage({
           chapters={timeline.chapters}
           plotlines={timeline.plotlines}
           scenes={timeline.scenes}
+          characters={characters}
+          places={places}
+          tags={tags}
         />
       </div>
     </div>

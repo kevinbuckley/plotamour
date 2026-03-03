@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, FileText, ExternalLink, Trash2 } from "lucide-react";
-import type { Scene, SceneGoogleDoc, Chapter, Plotline } from "@/lib/types/database";
+import { X, FileText, ExternalLink, Trash2, User, MapPin, Plus } from "lucide-react";
+import { TagPicker } from "@/components/shared/tag-picker";
+import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag } from "@/lib/types/database";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
 
@@ -14,10 +15,14 @@ interface SceneDetailPanelProps {
   chapters: Chapter[];
   plotlines: Plotline[];
   projectId: string;
+  characters: Character[];
+  places: Place[];
+  tags: Tag[];
   onUpdate: (id: string, data: Partial<Scene>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onMove: (sceneId: string, chapterId: string, plotlineId: string) => Promise<void>;
   onClose: () => void;
+  onTagCreated: (tag: Tag) => void;
 }
 
 export function SceneDetailPanel({
@@ -25,19 +30,64 @@ export function SceneDetailPanel({
   chapters,
   plotlines,
   projectId,
+  characters,
+  places,
+  tags,
   onUpdate,
   onDelete,
   onMove,
   onClose,
+  onTagCreated,
 }: SceneDetailPanelProps) {
   const [title, setTitle] = useState(scene.title);
   const [summary, setSummary] = useState(scene.summary);
   const [conflict, setConflict] = useState(scene.conflict);
   const [creatingDoc, setCreatingDoc] = useState(false);
+  const [linkedCharacterIds, setLinkedCharacterIds] = useState<string[]>([]);
+  const [linkedPlaceIds, setLinkedPlaceIds] = useState<string[]>([]);
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [showCharacterPicker, setShowCharacterPicker] = useState(false);
+  const [showPlacePicker, setShowPlacePicker] = useState(false);
 
   const currentChapter = chapters.find((c) => c.id === scene.chapter_id);
   const currentPlotline = plotlines.find((p) => p.id === scene.plotline_id);
   const doc = scene.google_doc;
+
+  useEffect(() => {
+    setTitle(scene.title);
+    setSummary(scene.summary);
+    setConflict(scene.conflict);
+
+    // Fetch linked characters
+    fetch("/api/characters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getSceneCharacters", sceneId: scene.id }),
+    })
+      .then((r) => r.json())
+      .then(setLinkedCharacterIds)
+      .catch(() => {});
+
+    // Fetch linked places
+    fetch("/api/places", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getScenePlaces", sceneId: scene.id }),
+    })
+      .then((r) => r.json())
+      .then(setLinkedPlaceIds)
+      .catch(() => {});
+
+    // Fetch tags
+    fetch("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getSceneTags", sceneId: scene.id }),
+    })
+      .then((r) => r.json())
+      .then(setTagIds)
+      .catch(() => {});
+  }, [scene.id, scene.title, scene.summary, scene.conflict]);
 
   const handleSave = async () => {
     await onUpdate(scene.id, { title, summary, conflict });
@@ -67,6 +117,69 @@ export function SceneDetailPanel({
   const handleOpenDoc = () => {
     if (doc?.google_doc_url) window.open(doc.google_doc_url, "_blank");
   };
+
+  const handleLinkCharacter = async (characterId: string) => {
+    await fetch("/api/characters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "linkToScene", sceneId: scene.id, characterId }),
+    });
+    setLinkedCharacterIds((prev) => [...prev, characterId]);
+    setShowCharacterPicker(false);
+  };
+
+  const handleUnlinkCharacter = async (characterId: string) => {
+    await fetch("/api/characters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "unlinkFromScene", sceneId: scene.id, characterId }),
+    });
+    setLinkedCharacterIds((prev) => prev.filter((id) => id !== characterId));
+  };
+
+  const handleLinkPlace = async (placeId: string) => {
+    await fetch("/api/places", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "linkToScene", sceneId: scene.id, placeId }),
+    });
+    setLinkedPlaceIds((prev) => [...prev, placeId]);
+    setShowPlacePicker(false);
+  };
+
+  const handleUnlinkPlace = async (placeId: string) => {
+    await fetch("/api/places", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "unlinkFromScene", sceneId: scene.id, placeId }),
+    });
+    setLinkedPlaceIds((prev) => prev.filter((id) => id !== placeId));
+  };
+
+  const handleAddTag = async (tagId: string) => {
+    await fetch("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "addToScene", sceneId: scene.id, tagId }),
+    });
+    setTagIds((prev) => [...prev, tagId]);
+  };
+
+  const handleRemoveTag = async (tagId: string) => {
+    await fetch("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "removeFromScene", sceneId: scene.id, tagId }),
+    });
+    setTagIds((prev) => prev.filter((id) => id !== tagId));
+  };
+
+  const unlinkedCharacters = characters.filter(
+    (c) => !linkedCharacterIds.includes(c.id)
+  );
+  const unlinkedPlaces = places.filter(
+    (p) => !linkedPlaceIds.includes(p.id)
+  );
 
   return (
     <>
@@ -149,6 +262,139 @@ export function SceneDetailPanel({
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Characters */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">Characters</label>
+            <div className="space-y-1.5">
+              {linkedCharacterIds.map((cid) => {
+                const char = characters.find((c) => c.id === cid);
+                if (!char) return null;
+                return (
+                  <div
+                    key={cid}
+                    className="group flex items-center gap-2 rounded-md bg-muted/50 px-3 py-1.5"
+                  >
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-sm">{char.name}</span>
+                    <button
+                      onClick={() => handleUnlinkCharacter(cid)}
+                      className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+              {showCharacterPicker ? (
+                <div className="rounded-md border border-border p-2">
+                  {unlinkedCharacters.length === 0 ? (
+                    <p className="px-2 py-1 text-xs text-muted-foreground">
+                      No more characters to add
+                    </p>
+                  ) : (
+                    unlinkedCharacters.map((char) => (
+                      <button
+                        key={char.id}
+                        onClick={() => handleLinkCharacter(char.id)}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+                      >
+                        <User className="h-3.5 w-3.5 text-muted-foreground" />
+                        {char.name}
+                      </button>
+                    ))
+                  )}
+                  <button
+                    onClick={() => setShowCharacterPicker(false)}
+                    className="mt-1 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCharacterPicker(true)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add character
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Places */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">Places</label>
+            <div className="space-y-1.5">
+              {linkedPlaceIds.map((pid) => {
+                const pl = places.find((p) => p.id === pid);
+                if (!pl) return null;
+                return (
+                  <div
+                    key={pid}
+                    className="group flex items-center gap-2 rounded-md bg-muted/50 px-3 py-1.5"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-sm">{pl.name}</span>
+                    <button
+                      onClick={() => handleUnlinkPlace(pid)}
+                      className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+              {showPlacePicker ? (
+                <div className="rounded-md border border-border p-2">
+                  {unlinkedPlaces.length === 0 ? (
+                    <p className="px-2 py-1 text-xs text-muted-foreground">
+                      No more places to add
+                    </p>
+                  ) : (
+                    unlinkedPlaces.map((pl) => (
+                      <button
+                        key={pl.id}
+                        onClick={() => handleLinkPlace(pl.id)}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+                      >
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                        {pl.name}
+                      </button>
+                    ))
+                  )}
+                  <button
+                    onClick={() => setShowPlacePicker(false)}
+                    className="mt-1 w-full text-center text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowPlacePicker(true)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add place
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="mb-2 block text-sm font-medium">Tags</label>
+            <TagPicker
+              allTags={tags}
+              selectedTagIds={tagIds}
+              projectId={projectId}
+              onAdd={handleAddTag}
+              onRemove={handleRemoveTag}
+              onCreate={onTagCreated}
+            />
           </div>
 
           {/* Google Docs section */}

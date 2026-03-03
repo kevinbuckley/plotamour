@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 import { PLOTLINE_COLORS } from "@/lib/config/constants";
-import type { Chapter, Plotline, Scene, SceneGoogleDoc } from "@/lib/types/database";
+import type { Chapter, Plotline, Scene, SceneGoogleDoc, Character, Place, Tag } from "@/lib/types/database";
 import { SceneCard } from "./scene-card";
 import { SceneDetailPanel } from "./scene-detail-panel";
 import { Plus } from "lucide-react";
@@ -16,6 +16,9 @@ interface TimelineGridProps {
   chapters: Chapter[];
   plotlines: Plotline[];
   scenes: SceneWithDoc[];
+  characters: Character[];
+  places: Place[];
+  tags: Tag[];
 }
 
 async function timelineAction(body: Record<string, unknown>) {
@@ -34,10 +37,16 @@ export function TimelineGrid({
   chapters: initialChapters,
   plotlines: initialPlotlines,
   scenes: initialScenes,
+  characters: initialCharacters,
+  places: initialPlaces,
+  tags: initialTags,
 }: TimelineGridProps) {
   const [chapters, setChapters] = useState(initialChapters);
   const [plotlines, setPlotlines] = useState(initialPlotlines);
   const [scenes, setScenes] = useState(initialScenes);
+  const [characters] = useState(initialCharacters);
+  const [places] = useState(initialPlaces);
+  const [tags, setTags] = useState(initialTags);
   const [selectedScene, setSelectedScene] = useState<SceneWithDoc | null>(null);
   const [editingChapter, setEditingChapter] = useState<string | null>(null);
   const [editingPlotline, setEditingPlotline] = useState<string | null>(null);
@@ -313,10 +322,14 @@ export function TimelineGrid({
           chapters={chapters}
           plotlines={plotlines}
           projectId={projectId}
+          characters={characters}
+          places={places}
+          tags={tags}
           onUpdate={handleUpdateScene}
           onDelete={handleDeleteScene}
           onMove={handleMoveScene}
           onClose={() => setSelectedScene(null)}
+          onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
         />
       )}
     </div>

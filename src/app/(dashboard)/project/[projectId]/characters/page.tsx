@@ -1,5 +1,8 @@
 import { getProject } from "@/lib/services/projects";
+import { getCharacters } from "@/lib/services/characters";
+import { getTags } from "@/lib/services/tags";
 import { redirect } from "next/navigation";
+import { CharacterList } from "@/components/characters/character-list";
 
 export default async function CharactersPage({
   params,
@@ -10,6 +13,11 @@ export default async function CharactersPage({
   const project = await getProject(projectId);
   if (!project) redirect("/projects");
 
+  const [characters, tags] = await Promise.all([
+    getCharacters(projectId),
+    getTags(projectId),
+  ]);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border px-6 py-3">
@@ -18,13 +26,12 @@ export default async function CharactersPage({
           <p className="text-xs text-muted-foreground">Characters</p>
         </div>
       </div>
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-semibold">Characters coming in Phase 2</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Track your characters and link them to scenes.
-          </p>
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <CharacterList
+          projectId={projectId}
+          initialCharacters={characters}
+          initialTags={tags}
+        />
       </div>
     </div>
   );

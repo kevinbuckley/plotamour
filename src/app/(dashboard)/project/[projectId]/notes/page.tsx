@@ -1,5 +1,7 @@
 import { getProject } from "@/lib/services/projects";
+import { getNotes } from "@/lib/services/notes";
 import { redirect } from "next/navigation";
+import { NotesList } from "@/components/notes/notes-list";
 
 export default async function NotesPage({
   params,
@@ -10,6 +12,8 @@ export default async function NotesPage({
   const project = await getProject(projectId);
   if (!project) redirect("/projects");
 
+  const notes = await getNotes(projectId);
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-border px-6 py-3">
@@ -18,13 +22,8 @@ export default async function NotesPage({
           <p className="text-xs text-muted-foreground">Notes</p>
         </div>
       </div>
-      <div className="flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-semibold">Notes coming in Phase 2</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Brainstorm and organize your story ideas.
-          </p>
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <NotesList projectId={projectId} initialNotes={notes} />
       </div>
     </div>
   );
