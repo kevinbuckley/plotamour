@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description } = body;
+    const { title, description, projectType } = body;
 
     if (!title?.trim()) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -13,6 +13,7 @@ export async function POST(request: Request) {
     const { project, bookId } = await createProject({
       title: title.trim(),
       description: description?.trim(),
+      projectType,
     });
 
     return NextResponse.json({ projectId: project.id, bookId });

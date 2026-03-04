@@ -85,7 +85,7 @@ export default async function ProjectsPage() {
           </p>
           <div className="mt-6 flex gap-3">
             <Button asChild>
-              <Link href="/projects/new">Start from scratch</Link>
+              <Link href="/projects/new">Create a project</Link>
             </Button>
           </div>
         </div>
