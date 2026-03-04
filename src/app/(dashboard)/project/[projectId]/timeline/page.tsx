@@ -4,6 +4,7 @@ import { getCharacters } from "@/lib/services/characters";
 import { getPlaces } from "@/lib/services/places";
 import { getTags } from "@/lib/services/tags";
 import { TimelineGrid } from "@/components/timeline/timeline-grid";
+import { ExportMenu } from "@/components/shared/export-menu";
 import { redirect } from "next/navigation";
 
 export default async function TimelinePage({
@@ -36,6 +37,7 @@ export default async function TimelinePage({
           <h1 className="text-lg font-semibold">{project.title}</h1>
           <p className="text-xs text-muted-foreground">Timeline</p>
         </div>
+        <ExportMenu bookId={bookId} />
       </div>
       <div className="flex-1 overflow-auto">
         <TimelineGrid
