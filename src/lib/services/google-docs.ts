@@ -16,11 +16,15 @@ async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
     .eq("id", userId)
     .single();
 
-  if (!profile?.google_refresh_token) return null;
+  if (!profile?.google_refresh_token) {
+    console.error("[GoogleDocs] No refresh token found in profile for user:", userId);
+    return null;
+  }
 
   // Try session provider_token first (available right after OAuth login)
   const { data: { session } } = await supabase.auth.getSession();
   if (session?.provider_token) {
+    console.log("[GoogleDocs] Using session provider_token");
     return {
       access_token: session.provider_token,
       refresh_token: profile.google_refresh_token,
@@ -28,19 +32,31 @@ async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
   }
 
   // Fallback: use refresh token to get a fresh access token from Google
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.error("[GoogleDocs] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set");
+    return null;
+  }
+
+  console.log("[GoogleDocs] Refreshing access token via Google OAuth...");
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
       refresh_token: profile.google_refresh_token,
       grant_type: "refresh_token",
     }),
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error("[GoogleDocs] Token refresh failed:", res.status, errBody);
+    return null;
+  }
+
   const tokenData = await res.json();
+  console.log("[GoogleDocs] Token refresh successful");
 
   return {
     access_token: tokenData.access_token,
@@ -59,10 +75,16 @@ export async function createDocForScene(input: {
 }): Promise<SceneGoogleDoc | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  if (!user) {
+    console.error("[GoogleDocs] No authenticated user");
+    return null;
+  }
 
   const tokens = await getGoogleTokens(user.id);
-  if (!tokens) return null;
+  if (!tokens) {
+    console.error("[GoogleDocs] Could not obtain Google tokens");
+    return null;
+  }
 
   const docTitle = `${input.bookTitle} — Ch${input.chapterNumber}: ${input.sceneTitle}`;
 
@@ -87,7 +109,11 @@ export async function createDocForScene(input: {
       body: JSON.stringify({ title: docTitle }),
     });
 
-    if (!createRes.ok) return null;
+    if (!createRes.ok) {
+      const errBody = await createRes.text();
+      console.error("[GoogleDocs] Doc creation failed:", createRes.status, errBody);
+      return null;
+    }
     const doc = await createRes.json();
     const docId = doc.documentId;
 
