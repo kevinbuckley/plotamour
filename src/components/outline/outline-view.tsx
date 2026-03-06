@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
-import { ChevronRight, ChevronDown, FileText, ExternalLink } from "lucide-react";
+import { ChevronRight, ChevronDown, FileText, ExternalLink, Loader2 } from "lucide-react";
 import type { Chapter, Plotline, Scene, SceneGoogleDoc, WritingStatus } from "@/lib/types/database";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
@@ -20,8 +20,10 @@ const STATUS_ICONS: Record<WritingStatus, { icon: string; className: string }> =
   draft_complete: { icon: "●", className: "text-green-500" },
 };
 
-export function OutlineView({ chapters, plotlines, scenes }: OutlineViewProps) {
+export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineViewProps) {
   const [collapsedChapters, setCollapsedChapters] = useState<Set<string>>(new Set());
+  const [creatingDocForScene, setCreatingDocForScene] = useState<string | null>(null);
+  const [docErrors, setDocErrors] = useState<Record<string, string>>({});
 
   const toggleChapter = (id: string) => {
     setCollapsedChapters((prev) => {
@@ -40,6 +42,44 @@ export function OutlineView({ chapters, plotlines, scenes }: OutlineViewProps) {
         const plotB = plotlines.findIndex((p) => p.id === b.plotline_id);
         return plotA - plotB || a.position - b.position;
       });
+
+  const handleCreateDoc = async (sceneId: string) => {
+    setCreatingDocForScene(sceneId);
+    setDocErrors((prev) => {
+      const next = { ...prev };
+      delete next[sceneId];
+      return next;
+    });
+
+    try {
+      const res = await fetch("/api/google-docs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "createDoc",
+          sceneId,
+          projectId,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.open(data.url, "_blank");
+          // Reload to update doc status
+          window.location.reload();
+        } else {
+          setDocErrors((prev) => ({ ...prev, [sceneId]: "Failed to create doc. Try signing out and back in." }));
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setDocErrors((prev) => ({ ...prev, [sceneId]: err.error || "Failed to create Google Doc." }));
+      }
+    } catch {
+      setDocErrors((prev) => ({ ...prev, [sceneId]: "Network error. Please try again." }));
+    } finally {
+      setCreatingDocForScene(null);
+    }
+  };
 
   const totalWords = scenes.reduce((sum, s) => sum + (s.google_doc?.word_count ?? 0), 0);
   const completedScenes = scenes.filter((s) => s.google_doc?.writing_status === "draft_complete").length;
@@ -99,6 +139,8 @@ export function OutlineView({ chapters, plotlines, scenes }: OutlineViewProps) {
                       const doc = scene.google_doc;
                       const status = doc?.writing_status ?? "not_started";
                       const statusInfo = STATUS_ICONS[status];
+                      const isCreating = creatingDocForScene === scene.id;
+                      const error = docErrors[scene.id];
 
                       return (
                         <div
@@ -125,24 +167,42 @@ export function OutlineView({ chapters, plotlines, scenes }: OutlineViewProps) {
                                 {scene.summary}
                               </p>
                             )}
-                            {doc && doc.word_count > 0 && (
-                              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                                <FileText className="h-3 w-3" />
-                                <span>{doc.word_count.toLocaleString()} words</span>
-                              </div>
-                            )}
+                            {/* Google Doc link or create button */}
+                            <div className="mt-1">
+                              {doc?.google_doc_url ? (
+                                <a
+                                  href={doc.google_doc_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  <span>Open in Google Docs</span>
+                                  {doc.word_count > 0 && (
+                                    <span className="text-muted-foreground/70">
+                                      · {doc.word_count.toLocaleString()} words
+                                    </span>
+                                  )}
+                                </a>
+                              ) : (
+                                <button
+                                  onClick={() => handleCreateDoc(scene.id)}
+                                  disabled={isCreating}
+                                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary disabled:opacity-50"
+                                >
+                                  {isCreating ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <FileText className="h-3 w-3" />
+                                  )}
+                                  <span>{isCreating ? "Creating..." : "Write in Google Docs"}</span>
+                                </button>
+                              )}
+                              {error && (
+                                <p className="mt-0.5 text-xs text-destructive">{error}</p>
+                              )}
+                            </div>
                           </div>
-                          {doc?.google_doc_url && (
-                            <a
-                              href={doc.google_doc_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-1 text-muted-foreground opacity-0 transition-opacity hover:text-primary group-hover:opacity-100"
-                              title="Open in Google Docs"
-                            >
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          )}
                         </div>
                       );
                     })

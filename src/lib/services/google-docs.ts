@@ -18,12 +18,32 @@ async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
 
   if (!profile?.google_refresh_token) return null;
 
-  // Get a fresh access token from Supabase session
+  // Try session provider_token first (available right after OAuth login)
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.provider_token) return null;
+  if (session?.provider_token) {
+    return {
+      access_token: session.provider_token,
+      refresh_token: profile.google_refresh_token,
+    };
+  }
+
+  // Fallback: use refresh token to get a fresh access token from Google
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      refresh_token: profile.google_refresh_token,
+      grant_type: "refresh_token",
+    }),
+  });
+
+  if (!res.ok) return null;
+  const tokenData = await res.json();
 
   return {
-    access_token: session.provider_token,
+    access_token: tokenData.access_token,
     refresh_token: profile.google_refresh_token,
   };
 }

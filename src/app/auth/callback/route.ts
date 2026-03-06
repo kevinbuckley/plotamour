@@ -10,6 +10,14 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Store the Google refresh token for later Google Docs API access
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.provider_refresh_token) {
+        await supabase
+          .from("profiles")
+          .update({ google_refresh_token: session.provider_refresh_token })
+          .eq("id", session.user.id);
+      }
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

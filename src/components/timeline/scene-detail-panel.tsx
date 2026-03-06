@@ -43,6 +43,7 @@ export function SceneDetailPanel({
   const [summary, setSummary] = useState(scene.summary);
   const [conflict, setConflict] = useState(scene.conflict);
   const [creatingDoc, setCreatingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
   const [linkedCharacterIds, setLinkedCharacterIds] = useState<string[]>([]);
   const [linkedPlaceIds, setLinkedPlaceIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
@@ -95,6 +96,7 @@ export function SceneDetailPanel({
 
   const handleCreateDoc = async () => {
     setCreatingDoc(true);
+    setDocError(null);
     try {
       const res = await fetch("/api/google-docs", {
         method: "POST",
@@ -107,8 +109,17 @@ export function SceneDetailPanel({
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.url) window.open(data.url, "_blank");
+        if (data.url) {
+          window.open(data.url, "_blank");
+        } else {
+          setDocError("Failed to create document. Try signing out and back in.");
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setDocError(err.error || "Failed to create Google Doc. Please try again.");
       }
+    } catch {
+      setDocError("Network error. Please try again.");
     } finally {
       setCreatingDoc(false);
     }
@@ -425,14 +436,19 @@ export function SceneDetailPanel({
                 </Button>
               </div>
             ) : (
-              <Button
-                onClick={handleCreateDoc}
-                disabled={creatingDoc}
-                className="w-full gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                {creatingDoc ? "Creating..." : "Write in Google Docs"}
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={handleCreateDoc}
+                  disabled={creatingDoc}
+                  className="w-full gap-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  {creatingDoc ? "Creating..." : "Write in Google Docs"}
+                </Button>
+                {docError && (
+                  <p className="text-xs text-destructive">{docError}</p>
+                )}
+              </div>
             )}
           </div>
         </div>

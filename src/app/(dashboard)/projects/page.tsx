@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/db/server";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Upload } from "lucide-react";
 
 export default async function ProjectsPage() {
   const supabase = await createClient();
@@ -27,9 +28,17 @@ export default async function ProjectsPage() {
             .
           </p>
         </div>
-        <Button asChild>
-          <Link href="/projects/new">New Project</Link>
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/import" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import from Plottr
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/projects/new">New Project</Link>
+          </Button>
+        </div>
       </div>
 
       {hasProjects ? (
@@ -86,6 +95,12 @@ export default async function ProjectsPage() {
           <div className="mt-6 flex gap-3">
             <Button asChild>
               <Link href="/projects/new">Create a project</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/import" className="gap-2">
+                <Upload className="h-4 w-4" />
+                Import from Plottr
+              </Link>
             </Button>
           </div>
         </div>
