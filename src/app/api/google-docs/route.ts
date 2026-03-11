@@ -39,8 +39,20 @@ export async function POST(request: Request) {
         });
 
         if (!doc) {
+          // Check if the problem is missing auth (no stored refresh token)
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("google_refresh_token")
+            .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
+            .single();
+          const needsReconnect = !profile?.google_refresh_token;
           return NextResponse.json(
-            { error: "Failed to create Google Doc. Make sure Google Docs access is authorized." },
+            {
+              error: needsReconnect
+                ? "Google Docs access not connected."
+                : "Failed to create Google Doc. Please try again.",
+              needsReconnect,
+            },
             { status: 400 }
           );
         }

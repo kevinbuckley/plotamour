@@ -1,20 +1,29 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/db/browser";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const reconnect = searchParams.get("reconnect") === "true";
+  const next = searchParams.get("next") ?? "/projects";
+
   const handleLogin = async () => {
     const supabase = createClient();
 
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         scopes:
           "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
         queryParams: {
           access_type: "offline",
-          prompt: "consent",
+          // Only force the consent screen when reconnecting — on a normal
+          // first-time login Google shows it automatically. Forcing it on
+          // every login annoys returning users.
+          ...(reconnect ? { prompt: "consent" } : {}),
         },
       },
     });
@@ -24,10 +33,12 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-sm text-center">
         <h1 className="text-2xl font-bold tracking-tight">
-          Sign in to plotamour
+          {reconnect ? "Reconnect Google Docs" : "Sign in to plotamour"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Plan your novel. Write in Google Docs. Love every word.
+          {reconnect
+            ? "Grant access to Google Docs so plotamour can create documents for your scenes."
+            : "Plan your novel. Write in Google Docs. Love every word."}
         </p>
         <button
           onClick={handleLogin}
@@ -51,9 +62,17 @@ export default function LoginPage() {
               fill="#EA4335"
             />
           </svg>
-          Sign in with Google
+          {reconnect ? "Reconnect with Google" : "Sign in with Google"}
         </button>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

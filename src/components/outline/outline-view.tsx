@@ -68,11 +68,14 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
           // Reload to update doc status
           window.location.reload();
         } else {
-          setDocErrors((prev) => ({ ...prev, [sceneId]: "Failed to create doc. Try signing out and back in." }));
+          setDocErrors((prev) => ({ ...prev, [sceneId]: "Failed to create doc." }));
         }
       } else {
         const err = await res.json().catch(() => ({}));
-        setDocErrors((prev) => ({ ...prev, [sceneId]: err.error || "Failed to create Google Doc." }));
+        setDocErrors((prev) => ({
+          ...prev,
+          [sceneId]: err.needsReconnect ? "reconnect" : (err.error || "Failed to create Google Doc."),
+        }));
       }
     } catch {
       setDocErrors((prev) => ({ ...prev, [sceneId]: "Network error. Please try again." }));
@@ -199,7 +202,19 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
                                 </button>
                               )}
                               {error && (
-                                <p className="mt-0.5 text-xs text-destructive">{error}</p>
+                                error === "reconnect" ? (
+                                  <p className="mt-0.5 text-xs text-destructive">
+                                    Google Docs not connected.{" "}
+                                    <a
+                                      href={`/auth/login?reconnect=true&next=${encodeURIComponent(window.location.pathname)}`}
+                                      className="underline hover:no-underline"
+                                    >
+                                      Connect →
+                                    </a>
+                                  </p>
+                                ) : (
+                                  <p className="mt-0.5 text-xs text-destructive">{error}</p>
+                                )
                               )}
                             </div>
                           </div>

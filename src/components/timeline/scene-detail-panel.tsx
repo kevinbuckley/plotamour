@@ -112,11 +112,11 @@ export function SceneDetailPanel({
         if (data.url) {
           window.open(data.url, "_blank");
         } else {
-          setDocError("Failed to create document. Try signing out and back in.");
+          setDocError("Failed to create document.");
         }
       } else {
         const err = await res.json().catch(() => ({}));
-        setDocError(err.error || "Failed to create Google Doc. Please try again.");
+        setDocError(err.needsReconnect ? "reconnect" : (err.error || "Failed to create Google Doc."));
       }
     } catch {
       setDocError("Network error. Please try again.");
@@ -446,7 +446,19 @@ export function SceneDetailPanel({
                   {creatingDoc ? "Creating..." : "Write in Google Docs"}
                 </Button>
                 {docError && (
-                  <p className="text-xs text-destructive">{docError}</p>
+                  docError === "reconnect" ? (
+                    <p className="text-xs text-destructive">
+                      Google Docs not connected.{" "}
+                      <a
+                        href={`/auth/login?reconnect=true&next=${encodeURIComponent(window.location.pathname)}`}
+                        className="underline hover:no-underline"
+                      >
+                        Connect Google Docs →
+                      </a>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-destructive">{docError}</p>
+                  )
                 )}
               </div>
             )}
