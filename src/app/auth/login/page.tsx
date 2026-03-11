@@ -16,13 +16,17 @@ function LoginForm() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        scopes:
-          "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
+        // Only request Google Docs/Drive scopes when the user explicitly
+        // connects Google Docs. Requesting sensitive scopes at normal login
+        // forces a multi-step scary approval flow on every sign-in.
+        ...(reconnect
+          ? {
+              scopes:
+                "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
+            }
+          : {}),
         queryParams: {
           access_type: "offline",
-          // Only force the consent screen when reconnecting — on a normal
-          // first-time login Google shows it automatically. Forcing it on
-          // every login annoys returning users.
           ...(reconnect ? { prompt: "consent" } : {}),
         },
       },
