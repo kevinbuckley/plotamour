@@ -30,8 +30,8 @@ export function DroppableCell({
       className={cn(
         "group/cell flex min-h-[100px] flex-col gap-1 rounded-md border border-dashed p-1.5 transition-colors",
         isOver
-          ? "border-primary bg-primary/5"
-          : "border-transparent hover:border-border hover:bg-muted/30"
+          ? "border-primary/60 bg-primary/6 shadow-sm"
+          : "border-transparent hover:border-border/60 hover:bg-muted/20"
       )}
     >
       {children}

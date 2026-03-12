@@ -3,6 +3,28 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Upload } from "lucide-react";
 
+/** Generate a stable hue from a project ID for the card accent strip */
+function getProjectHue(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  // Keep hues in the blue-violet-pink range (220–330) to match the app palette
+  return 220 + (Math.abs(hash) % 110);
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export default async function ProjectsPage() {
   const supabase = await createClient();
   const { data: user } = await supabase.auth.getUser();
@@ -15,27 +37,30 @@ export default async function ProjectsPage() {
 
   const hasProjects = projects && projects.length > 0;
 
+  const firstName = user?.user?.user_metadata?.full_name?.split(" ")[0];
+
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between">
+    <div className="min-h-full p-8">
+      {/* Page header */}
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Your Projects</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {firstName ? `Hey, ${firstName} 👋` : "Your Projects"}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Welcome back
-            {user?.user?.user_metadata?.full_name
-              ? `, ${user.user.user_metadata.full_name}`
-              : ""}
-            .
+            {hasProjects
+              ? `${projects.length} project${projects.length !== 1 ? "s" : ""} — pick one to continue writing.`
+              : "Start building your first story world."}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" asChild>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
             <Link href="/import" className="gap-2">
-              <Upload className="h-4 w-4" />
+              <Upload className="h-3.5 w-3.5" />
               Import from Plottr
             </Link>
           </Button>
-          <Button asChild>
+          <Button size="sm" asChild>
             <Link href="/projects/new">New Project</Link>
           </Button>
         </div>
@@ -43,36 +68,59 @@ export default async function ProjectsPage() {
 
       {hasProjects ? (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/project/${project.id}/timeline`}
-              className="group rounded-lg border border-border bg-card p-5 transition-all hover:border-primary hover:shadow-sm"
-            >
-              <h2 className="font-semibold group-hover:text-primary">
-                {project.title}
-              </h2>
-              {project.description && (
-                <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {project.description}
-                </p>
-              )}
-              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="capitalize">{project.project_type}</span>
-                <span>&middot;</span>
-                <span>
-                  Updated{" "}
-                  {new Date(project.updated_at).toLocaleDateString()}
-                </span>
-              </div>
-            </Link>
-          ))}
+          {projects.map((project) => {
+            const hue = getProjectHue(project.id);
+            return (
+              <Link
+                key={project.id}
+                href={`/project/${project.id}/timeline`}
+                className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                {/* Color accent strip */}
+                <div
+                  className="h-1.5 w-full shrink-0"
+                  style={{
+                    background: `linear-gradient(90deg, hsl(${hue}, 65%, 58%), hsl(${hue + 25}, 70%, 65%))`,
+                  }}
+                />
+
+                {/* Card body */}
+                <div className="flex flex-1 flex-col p-5">
+                  <h2 className="font-semibold text-foreground transition-colors group-hover:text-primary">
+                    {project.title}
+                  </h2>
+                  {project.description && (
+                    <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                      {project.description}
+                    </p>
+                  )}
+
+                  {/* Meta row */}
+                  <div className="mt-auto flex items-center justify-between pt-4">
+                    <span
+                      className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize"
+                      style={{
+                        backgroundColor: `hsl(${hue}, 65%, 95%)`,
+                        color: `hsl(${hue}, 55%, 40%)`,
+                      }}
+                    >
+                      {project.project_type}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(project.updated_at)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       ) : (
-        <div className="mt-16 flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+        /* Empty state */
+        <div className="mt-20 flex flex-col items-center text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 shadow-inner">
             <svg
-              className="h-8 w-8 text-primary"
+              className="h-10 w-10 text-primary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -85,14 +133,12 @@ export default async function ProjectsPage() {
               />
             </svg>
           </div>
-          <h2 className="mt-4 text-lg font-semibold">
-            Welcome to plotamour!
-          </h2>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            Let&apos;s plan your first story. Create a project to start
-            building your timeline and outline.
+          <h2 className="mt-5 text-xl font-bold">Ready to tell a story?</h2>
+          <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            Create your first project to start mapping plotlines, crafting
+            characters, and writing in Google Docs.
           </p>
-          <div className="mt-6 flex gap-3">
+          <div className="mt-7 flex gap-3">
             <Button asChild>
               <Link href="/projects/new">Create a project</Link>
             </Button>

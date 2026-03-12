@@ -11,39 +11,39 @@
   --accent-hover: #4f46e5;
   --accent-light: #eef2ff;
 
-  /* shadcn/ui tokens — mapped to our Notion-like palette */
-  --radius: 0.5rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* shadcn/ui tokens — mapped to our refined palette */
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.002 285);
+  --foreground: oklch(0.13 0.01 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.13 0.01 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.13 0.01 285);
   --primary: oklch(0.488 0.183 274.376);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.96 0.003 285);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --muted: oklch(0.96 0.003 285);
+  --muted-foreground: oklch(0.52 0.01 285);
+  --accent: oklch(0.94 0.005 285);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.9 0.004 285);
+  --input: oklch(0.9 0.004 285);
   --ring: oklch(0.488 0.183 274.376);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.714);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar: oklch(0.955 0.005 285);
+  --sidebar-foreground: oklch(0.13 0.01 285);
+  --sidebar-primary: oklch(0.488 0.183 274.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent: oklch(0.93 0.007 285);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: oklch(0.885 0.005 285);
   --sidebar-ring: oklch(0.488 0.183 274.376);
 }
 
@@ -94,4 +94,28 @@ body {
     "Segoe UI",
     Roboto,
     sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Polished scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: oklch(0.82 0.005 285);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.7 0.008 285);
+}
+
+/* Better text selection */
+::selection {
+  background: oklch(0.488 0.183 274.376 / 0.18);
+  color: oklch(0.13 0.01 285);
 }

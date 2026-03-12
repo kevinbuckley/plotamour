@@ -22,16 +22,30 @@ export function AppSidebar({
   const firstBookId = books?.[0]?.id;
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-border bg-muted/50">
+    <aside className="flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
       <div className="flex items-center px-4 py-4">
-        <Link href="/projects" className="text-lg font-semibold tracking-tight">
-          plotamour
+        <Link
+          href="/projects"
+          className="flex items-center gap-2 group"
+        >
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm">
+            <svg
+              className="h-4 w-4 text-primary-foreground"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" />
+            </svg>
+          </div>
+          <span className="text-base font-bold tracking-tight text-foreground">
+            plot<span className="text-primary">amour</span>
+          </span>
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-2 py-2">
+      <nav className="flex-1 space-y-0.5 px-2 py-2">
         <SidebarLink
           href="/projects"
           label="All Projects"
@@ -58,8 +72,8 @@ export function AppSidebar({
               </div>
             )}
 
-            <div className="px-3 pt-4 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {isSeries ? "Current Book" : "Book"}
+            <div className="px-3 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+              {isSeries ? "Current Book" : "Project"}
             </div>
 
             {/* Series overview link */}
@@ -143,12 +157,25 @@ export function AppSidebar({
       </nav>
 
       {/* User section at bottom */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-sidebar-border p-3">
         <form action="/auth/signout" method="post">
           <button
             type="submit"
-            className="w-full rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-accent"
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
           >
+            <svg
+              className="h-4 w-4 shrink-0"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
             Sign out
           </button>
         </form>
@@ -172,14 +199,14 @@ function SidebarLink({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+        "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150",
         active
-          ? "bg-background font-medium text-foreground shadow-sm"
-          : "text-muted-foreground hover:bg-accent"
+          ? "bg-primary/10 font-semibold text-primary shadow-none"
+          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
       )}
     >
       <svg
-        className="h-4 w-4"
+        className={cn("h-4 w-4 shrink-0 transition-colors", active ? "text-primary" : "")}
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"

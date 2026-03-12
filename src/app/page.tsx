@@ -42,31 +42,61 @@ function HomeContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col" style={{ background: "oklch(0.985 0.002 285)" }}>
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
-        <span className="text-lg font-semibold tracking-tight">plotamour</span>
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary shadow-sm">
+            <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" />
+            </svg>
+          </div>
+          <span className="text-base font-bold tracking-tight">
+            plot<span className="text-primary">amour</span>
+          </span>
+        </div>
         <button
           onClick={handleLogin}
-          className="flex items-center gap-2 rounded-md border border-border bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-all hover:shadow-md hover:border-primary/40"
         >
           Sign in
         </button>
       </header>
 
       {/* Hero */}
-      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-16 pt-12">
-        <div className="w-full max-w-lg text-center">
+      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-16 pt-10">
+        {/* Gradient blob behind content */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: 600,
+            height: 400,
+            background:
+              "radial-gradient(ellipse at center, oklch(0.488 0.183 274.376 / 0.08) 0%, transparent 70%)",
+            filter: "blur(40px)",
+          }}
+        />
+
+        <div className="relative w-full max-w-lg text-center">
           {/* Eyebrow */}
-          <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">
+          <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/8 px-3 py-1 text-xs font-semibold text-primary">
+            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" />
+            </svg>
             For hobby novelists
-          </p>
+          </div>
 
           {/* Headline */}
-          <h1 className="text-5xl font-bold tracking-tight sm:text-6xl">
+          <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl leading-tight">
             Plan your novel.
             <br />
-            <span className="text-primary">Love every word.</span>
+            <span
+              className="bg-clip-text text-transparent"
+              style={{ backgroundImage: "linear-gradient(135deg, oklch(0.488 0.183 274.376), oklch(0.55 0.2 310))" }}
+            >
+              Love every word.
+            </span>
           </h1>
 
           <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
@@ -77,7 +107,7 @@ function HomeContent() {
           {/* Sign-in button */}
           <button
             onClick={handleLogin}
-            className="mt-10 inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-lg border border-border bg-background px-6 py-3.5 text-sm font-medium shadow-sm transition-all hover:bg-muted hover:shadow-md active:scale-[0.98]"
+            className="mt-10 inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]"
           >
             <GoogleIcon />
             Continue with Google — it&apos;s free
@@ -89,7 +119,7 @@ function HomeContent() {
         </div>
 
         {/* Feature cards */}
-        <div className="mt-20 grid w-full max-w-3xl gap-4 sm:grid-cols-3">
+        <div className="relative mt-20 grid w-full max-w-3xl gap-4 sm:grid-cols-3">
           <FeatureCard
             emoji="📐"
             title="Visual Timeline"
@@ -109,22 +139,22 @@ function HomeContent() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border px-8 py-5 text-center text-xs text-muted-foreground">
+      <footer className="border-t border-border/60 px-8 py-5 text-center text-xs text-muted-foreground">
         <div className="flex items-center justify-center gap-4">
           <a
             href="https://github.com/kevinbuckley/plotamour"
-            className="hover:text-foreground transition-colors"
+            className="transition-colors hover:text-foreground"
             target="_blank"
             rel="noopener noreferrer"
           >
             GitHub
           </a>
-          <span>·</span>
-          <Link href="/privacy" className="hover:text-foreground transition-colors">
+          <span className="text-border">·</span>
+          <Link href="/privacy" className="transition-colors hover:text-foreground">
             Privacy
           </Link>
-          <span>·</span>
-          <Link href="/termsofservice" className="hover:text-foreground transition-colors">
+          <span className="text-border">·</span>
+          <Link href="/termsofservice" className="transition-colors hover:text-foreground">
             Terms
           </Link>
         </div>
@@ -143,10 +173,10 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-muted/30 px-5 py-5 text-left">
-      <div className="mb-2 text-2xl">{emoji}</div>
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
+    <div className="rounded-xl border border-border bg-card px-5 py-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <div className="mb-3 text-2xl">{emoji}</div>
+      <h3 className="text-sm font-bold">{title}</h3>
+      <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );
 }

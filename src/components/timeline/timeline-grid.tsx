@@ -240,19 +240,24 @@ export function TimelineGrid({
           <div
             className="grid gap-2"
             style={{
-              gridTemplateColumns: `180px repeat(${chapters.length}, minmax(180px, 1fr)) 48px`,
-              gridTemplateRows: `auto repeat(${plotlines.length}, minmax(100px, auto)) 48px`,
+              gridTemplateColumns: `188px repeat(${chapters.length}, minmax(188px, 1fr)) 52px`,
+              gridTemplateRows: `auto repeat(${plotlines.length}, minmax(100px, auto)) 52px`,
             }}
           >
             {/* Top-left empty cell */}
             <div />
 
             {/* Chapter headers */}
-            {chapters.map((chapter) => (
+            {chapters.map((chapter, idx) => (
               <div
                 key={chapter.id}
-                className="group flex items-center justify-between rounded-md bg-muted px-3 py-2"
+                className="group flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm"
               >
+                {/* Chapter number badge */}
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[10px] font-bold text-primary">
+                  {idx + 1}
+                </span>
+
                 {editingChapter === chapter.id ? (
                   <input
                     className="w-full rounded border border-input bg-background px-2 py-1 text-sm"
@@ -273,14 +278,15 @@ export function TimelineGrid({
                 ) : (
                   <>
                     <span
-                      className="cursor-pointer text-sm font-medium"
+                      className="flex-1 cursor-pointer truncate text-sm font-semibold"
                       onDoubleClick={() => setEditingChapter(chapter.id)}
+                      title="Double-click to rename"
                     >
                       {chapter.title}
                     </span>
                     <button
                       onClick={() => handleDeleteChapter(chapter.id)}
-                      className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                      className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                       title="Delete chapter"
                     >
                       <svg
@@ -305,7 +311,7 @@ export function TimelineGrid({
             {/* Add chapter button */}
             <button
               onClick={handleAddChapter}
-              className="flex items-center justify-center rounded-md border border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              className="flex items-center justify-center rounded-lg border-2 border-dashed border-border/60 text-muted-foreground/60 transition-all hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
               title="Add chapter"
             >
               <Plus className="h-4 w-4" />
@@ -317,11 +323,11 @@ export function TimelineGrid({
                 {/* Plotline header */}
                 <div
                   key={`header-${plotline.id}`}
-                  className="group flex items-center gap-2 rounded-md px-3 py-2"
-                  style={{ backgroundColor: `${plotline.color}15` }}
+                  className="group relative flex items-center gap-2.5 overflow-hidden rounded-lg border border-border px-3 py-2.5 shadow-sm"
+                  style={{ backgroundColor: `${plotline.color}12` }}
                 >
                   <div
-                    className="h-3 w-3 shrink-0 rounded-full"
+                    className="h-3 w-3 shrink-0 rounded-full shadow-sm"
                     style={{ backgroundColor: plotline.color }}
                   />
                   {editingPlotline === plotline.id ? (
@@ -366,16 +372,17 @@ export function TimelineGrid({
                   ) : (
                     <>
                       <span
-                        className="cursor-pointer text-sm font-medium"
+                        className="flex-1 cursor-pointer truncate text-sm font-semibold"
                         onDoubleClick={() =>
                           setEditingPlotline(plotline.id)
                         }
+                        title="Double-click to rename"
                       >
                         {plotline.title}
                       </span>
                       <button
                         onClick={() => handleDeletePlotline(plotline.id)}
-                        className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                        className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                         title="Delete plotline"
                       >
                         <svg
@@ -422,7 +429,7 @@ export function TimelineGrid({
                           handleAddScene(chapter.id, plotline.id)
                         }
                         className={cn(
-                          "flex items-center justify-center rounded-md border border-dashed border-border py-2 text-muted-foreground transition-all hover:border-primary hover:text-primary",
+                          "flex items-center justify-center rounded-md border border-dashed border-border/50 py-2 text-muted-foreground/50 transition-all hover:border-primary/60 hover:bg-primary/5 hover:text-primary",
                           "mt-auto opacity-0 group-hover/cell:opacity-100"
                         )}
                       >
@@ -440,7 +447,7 @@ export function TimelineGrid({
             {/* Add plotline row */}
             <button
               onClick={handleAddPlotline}
-              className="flex items-center justify-center gap-1 rounded-md border border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              className="flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-border/60 py-3 text-sm text-muted-foreground/60 transition-all hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
             >
               <Plus className="h-4 w-4" />
               <span>Add plotline</span>
@@ -452,13 +459,13 @@ export function TimelineGrid({
         <DragOverlay>
           {activeScene && (
             <div
-              className="w-[180px] rounded-md border border-border bg-card p-2.5 shadow-lg"
+              className="w-[188px] overflow-hidden rounded-lg border border-border bg-card p-2.5 shadow-xl"
               style={{
                 borderLeftColor: activePlotline?.color ?? "#6366f1",
-                borderLeftWidth: 3,
+                borderLeftWidth: "4px",
               }}
             >
-              <span className="line-clamp-2 text-sm font-medium leading-tight">
+              <span className="line-clamp-2 text-sm font-medium leading-snug">
                 {activeScene.title}
               </span>
               {activeScene.summary && (
