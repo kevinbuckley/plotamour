@@ -4,51 +4,42 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { createClient } from "@/lib/db/browser";
 
-function LoginForm() {
+function ReconnectForm() {
   const searchParams = useSearchParams();
-  const reconnect = searchParams.get("reconnect") === "true";
   const next = searchParams.get("next") ?? "/projects";
 
-  const handleLogin = async () => {
+  const handleReconnect = async () => {
     const supabase = createClient();
-
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        // Only request Google Docs/Drive scopes when the user explicitly
-        // connects Google Docs. Requesting sensitive scopes at normal login
-        // forces a multi-step scary approval flow on every sign-in.
-        ...(reconnect
-          ? {
-              scopes:
-                "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
-            }
-          : {}),
+        scopes:
+          "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
         queryParams: {
           access_type: "offline",
-          ...(reconnect ? { prompt: "consent" } : {}),
+          prompt: "consent",
         },
       },
     });
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm text-center">
+        <div className="mb-6 text-4xl">📝</div>
         <h1 className="text-2xl font-bold tracking-tight">
-          {reconnect ? "Reconnect Google Docs" : "Sign in to plotamour"}
+          Connect Google Docs
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {reconnect
-            ? "Grant access to Google Docs so plotamour can create documents for your scenes."
-            : "Plan your novel. Write in Google Docs. Love every word."}
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          plotamour needs permission to create Google Docs for your scenes.
+          You&apos;ll only need to do this once.
         </p>
         <button
-          onClick={handleLogin}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-border bg-background px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
+          onClick={handleReconnect}
+          className="mt-8 flex w-full items-center justify-center gap-3 rounded-lg border border-border bg-background px-4 py-3.5 text-sm font-medium shadow-sm transition-all hover:bg-muted hover:shadow-md active:scale-[0.98]"
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
+          <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
               fill="#4285F4"
@@ -66,8 +57,12 @@ function LoginForm() {
               fill="#EA4335"
             />
           </svg>
-          {reconnect ? "Reconnect with Google" : "Sign in with Google"}
+          Grant access with Google
         </button>
+        <p className="mt-4 text-xs text-muted-foreground">
+          This grants plotamour permission to create and edit Google Docs
+          on your behalf.
+        </p>
       </div>
     </div>
   );
@@ -76,7 +71,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense>
-      <LoginForm />
+      <ReconnectForm />
     </Suspense>
   );
 }
