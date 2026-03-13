@@ -1,6 +1,7 @@
 import { getProject, getFirstBookId } from "@/lib/services/projects";
 import { getTimelineData } from "@/lib/services/timeline";
 import { OutlineView } from "@/components/outline/outline-view";
+import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 import { redirect } from "next/navigation";
 
 export default async function OutlinePage({
@@ -26,7 +27,7 @@ export default async function OutlinePage({
       <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Outline</p>
-          <h1 className="mt-0.5 text-[15px] font-semibold tracking-tight">{project.title}</h1>
+          <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>
       </div>
       <div className="flex-1 overflow-auto">

@@ -5,6 +5,7 @@ import { getPlaces } from "@/lib/services/places";
 import { getTags } from "@/lib/services/tags";
 import { TimelineGrid } from "@/components/timeline/timeline-grid";
 import { ExportMenu } from "@/components/shared/export-menu";
+import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 import { redirect } from "next/navigation";
 
 export default async function TimelinePage({
@@ -35,7 +36,7 @@ export default async function TimelinePage({
       <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Timeline</p>
-          <h1 className="mt-0.5 text-[15px] font-semibold tracking-tight">{project.title}</h1>
+          <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>
         <ExportMenu bookId={bookId} />
       </div>

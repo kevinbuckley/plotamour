@@ -3,6 +3,7 @@ import { getCharacters } from "@/lib/services/characters";
 import { getTags } from "@/lib/services/tags";
 import { redirect } from "next/navigation";
 import { CharacterList } from "@/components/characters/character-list";
+import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 
 export default async function CharactersPage({
   params,
@@ -23,7 +24,7 @@ export default async function CharactersPage({
       <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Characters</p>
-          <h1 className="mt-0.5 text-[15px] font-semibold tracking-tight">{project.title}</h1>
+          <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>
       </div>
       <div className="flex-1 overflow-hidden">

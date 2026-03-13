@@ -2,6 +2,7 @@ import { getProject } from "@/lib/services/projects";
 import { getBooks } from "@/lib/services/books";
 import { redirect } from "next/navigation";
 import { SeriesDashboard } from "@/components/series/series-dashboard";
+import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 
 export default async function SeriesPage({
   params,
@@ -26,7 +27,7 @@ export default async function SeriesPage({
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
             Series Overview
           </p>
-          <h1 className="mt-0.5 text-[15px] font-semibold tracking-tight">{project.title}</h1>
+          <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>
       </div>
       <div className="flex-1 overflow-auto p-6">

@@ -2,6 +2,7 @@ import { getProject } from "@/lib/services/projects";
 import { getNotes } from "@/lib/services/notes";
 import { redirect } from "next/navigation";
 import { NotesList } from "@/components/notes/notes-list";
+import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 
 export default async function NotesPage({
   params,
@@ -19,7 +20,7 @@ export default async function NotesPage({
       <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Notes</p>
-          <h1 className="mt-0.5 text-[15px] font-semibold tracking-tight">{project.title}</h1>
+          <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
