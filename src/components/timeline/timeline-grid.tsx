@@ -240,8 +240,8 @@ export function TimelineGrid({
           <div
             className="grid gap-2"
             style={{
-              gridTemplateColumns: `188px repeat(${chapters.length}, minmax(188px, 1fr)) 52px`,
-              gridTemplateRows: `auto repeat(${plotlines.length}, minmax(100px, auto)) 52px`,
+              gridTemplateColumns: `188px repeat(${chapters.length}, 200px) 52px`,
+              gridTemplateRows: `auto repeat(${plotlines.length}, minmax(76px, auto)) 52px`,
             }}
           >
             {/* Top-left empty cell */}

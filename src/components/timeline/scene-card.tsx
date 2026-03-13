@@ -63,7 +63,7 @@ export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
         isDragging && "z-50 opacity-50 shadow-xl rotate-1"
       )}
     >
-      <div className="flex items-start gap-1 p-2.5">
+      <div className="flex items-start gap-1 p-2">
         {/* Drag handle */}
         <button
           {...attributes}
