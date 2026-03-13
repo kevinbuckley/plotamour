@@ -569,6 +569,9 @@ export function SceneDetailPanel({
                     )}
                     {creatingDoc ? "Creating doc..." : "Write in Google Docs"}
                   </Button>
+                  <p className="text-[10px] leading-tight text-muted-foreground/50">
+                    You may see a &ldquo;Google hasn&rsquo;t verified this app&rdquo; warning — click Advanced &rarr; Go to plotamour. This will be resolved by the end of March.
+                  </p>
                   {docError && (
                     docError === "reconnect" ? (
                       <p className="text-xs text-destructive">

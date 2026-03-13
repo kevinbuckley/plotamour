@@ -272,18 +272,23 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
                                   )}
                                 </a>
                               ) : (
-                                <button
-                                  onClick={() => handleCreateDoc(scene.id)}
-                                  disabled={isCreating}
-                                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs text-muted-foreground transition-all hover:bg-primary/8 hover:text-primary disabled:opacity-50"
-                                >
-                                  {isCreating ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <PenLine className="h-3 w-3" />
-                                  )}
-                                  <span>{isCreating ? "Creating..." : "Write in Google Docs"}</span>
-                                </button>
+                                <div>
+                                  <button
+                                    onClick={() => handleCreateDoc(scene.id)}
+                                    disabled={isCreating}
+                                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs text-muted-foreground transition-all hover:bg-primary/8 hover:text-primary disabled:opacity-50"
+                                  >
+                                    {isCreating ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <PenLine className="h-3 w-3" />
+                                    )}
+                                    <span>{isCreating ? "Creating..." : "Write in Google Docs"}</span>
+                                  </button>
+                                  <p className="ml-2 mt-0.5 text-[10px] leading-tight text-muted-foreground/50">
+                                    You may see a &ldquo;Google hasn&rsquo;t verified this app&rdquo; warning — click Advanced &rarr; Go to plotamour. This will be resolved by the end of March.
+                                  </p>
+                                </div>
                               )}
                               {error && (
                                 error === "reconnect" ? (
