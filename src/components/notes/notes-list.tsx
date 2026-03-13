@@ -45,26 +45,38 @@ export function NotesList({ projectId, initialNotes }: NotesListProps) {
   const selectedNote = notes.find((n) => n.id === selectedId) ?? null;
 
   const handleCreate = async () => {
-    const note = await noteAction({
-      action: "create",
-      projectId,
-      category: filterCategory || undefined,
-    });
-    setNotes((prev) => [note, ...prev]);
-    setSelectedId(note.id);
+    try {
+      const note = await noteAction({
+        action: "create",
+        projectId,
+        category: filterCategory || undefined,
+      });
+      setNotes((prev) => [note, ...prev]);
+      setSelectedId(note.id);
+    } catch (e) {
+      console.error("Failed to create note:", e);
+    }
   };
 
   const handleUpdate = async (id: string, data: Partial<Note>) => {
-    const updated = await noteAction({ action: "update", id, data });
-    setNotes((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, ...updated } : n))
-    );
+    try {
+      const updated = await noteAction({ action: "update", id, data });
+      setNotes((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, ...updated } : n))
+      );
+    } catch (e) {
+      console.error("Failed to update note:", e);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await noteAction({ action: "delete", id });
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-    if (selectedId === id) setSelectedId(null);
+    try {
+      await noteAction({ action: "delete", id });
+      setNotes((prev) => prev.filter((n) => n.id !== id));
+      if (selectedId === id) setSelectedId(null);
+    } catch (e) {
+      console.error("Failed to delete note:", e);
+    }
   };
 
   return (
@@ -181,6 +193,7 @@ export function NotesList({ projectId, initialNotes }: NotesListProps) {
       <div className="flex-1 overflow-y-auto">
         {selectedNote ? (
           <NoteEditor
+            key={selectedNote.id}
             note={selectedNote}
             onUpdate={handleUpdate}
             onDelete={handleDelete}
@@ -217,12 +230,7 @@ function NoteEditor({
   const [content, setContent] = useState(note.content);
   const [category, setCategory] = useState(note.category);
 
-  // Sync when note changes
-  useState(() => {
-    setTitle(note.title);
-    setContent(note.content);
-    setCategory(note.category);
-  });
+  // key={note.id} on the parent ensures state resets when switching notes
 
   const catHue = category ? getCategoryHue(category) : null;
 

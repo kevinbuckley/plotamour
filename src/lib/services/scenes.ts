@@ -93,6 +93,28 @@ export async function moveScene(
   newPosition: number
 ): Promise<void> {
   const supabase = await createClient();
+
+  // Validate that the target chapter and plotline belong to the same book as the scene
+  const { data: scene } = await supabase
+    .from("scenes")
+    .select("book_id")
+    .eq("id", sceneId)
+    .single();
+
+  if (!scene) throw new Error("Scene not found");
+
+  const [chapterRes, plotlineRes] = await Promise.all([
+    supabase.from("chapters").select("book_id").eq("id", newChapterId).single(),
+    supabase.from("plotlines").select("book_id").eq("id", newPlotlineId).single(),
+  ]);
+
+  if (!chapterRes.data || chapterRes.data.book_id !== scene.book_id) {
+    throw new Error("Target chapter does not belong to the same book");
+  }
+  if (!plotlineRes.data || plotlineRes.data.book_id !== scene.book_id) {
+    throw new Error("Target plotline does not belong to the same book");
+  }
+
   const { error } = await supabase
     .from("scenes")
     .update({

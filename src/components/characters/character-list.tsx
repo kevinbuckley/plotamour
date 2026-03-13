@@ -51,26 +51,38 @@ export function CharacterList({
   const selectedCharacter = characters.find((c) => c.id === selectedId) ?? null;
 
   const handleCreate = async () => {
-    const character = await characterAction({
-      action: "create",
-      projectId,
-      name: "New Character",
-    });
-    setCharacters((prev) => [...prev, character]);
-    setSelectedId(character.id);
+    try {
+      const character = await characterAction({
+        action: "create",
+        projectId,
+        name: "New Character",
+      });
+      setCharacters((prev) => [...prev, character]);
+      setSelectedId(character.id);
+    } catch (e) {
+      console.error("Failed to create character:", e);
+    }
   };
 
   const handleUpdate = async (id: string, data: Partial<Character>) => {
-    const updated = await characterAction({ action: "update", id, data });
-    setCharacters((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
-    );
+    try {
+      const updated = await characterAction({ action: "update", id, data });
+      setCharacters((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+      );
+    } catch (e) {
+      console.error("Failed to update character:", e);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await characterAction({ action: "delete", id });
-    setCharacters((prev) => prev.filter((c) => c.id !== id));
-    if (selectedId === id) setSelectedId(null);
+    try {
+      await characterAction({ action: "delete", id });
+      setCharacters((prev) => prev.filter((c) => c.id !== id));
+      if (selectedId === id) setSelectedId(null);
+    } catch (e) {
+      console.error("Failed to delete character:", e);
+    }
   };
 
   return (

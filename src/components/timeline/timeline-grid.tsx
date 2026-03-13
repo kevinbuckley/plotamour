@@ -88,89 +88,121 @@ export function TimelineGrid({
   );
 
   const handleAddChapter = async () => {
-    const index = chapters.length + 1;
-    const chapter = await timelineAction({
-      action: "addChapter",
-      bookId,
-      title: `Chapter ${index}`,
-      index,
-    });
-    setChapters((prev) => [...prev, chapter]);
+    try {
+      const index = chapters.length + 1;
+      const chapter = await timelineAction({
+        action: "addChapter",
+        bookId,
+        title: `Chapter ${index}`,
+        index,
+      });
+      setChapters((prev) => [...prev, chapter]);
+    } catch (e) {
+      console.error("Failed to add chapter:", e);
+    }
   };
 
   const handleAddPlotline = async () => {
-    const colorIndex = plotlines.length % PLOTLINE_COLORS.length;
-    const plotline = await timelineAction({
-      action: "addPlotline",
-      bookId,
-      title: "New Plotline",
-      colorIndex,
-    });
-    setPlotlines((prev) => [...prev, plotline]);
+    try {
+      const colorIndex = plotlines.length % PLOTLINE_COLORS.length;
+      const plotline = await timelineAction({
+        action: "addPlotline",
+        bookId,
+        title: "New Plotline",
+        colorIndex,
+      });
+      setPlotlines((prev) => [...prev, plotline]);
+    } catch (e) {
+      console.error("Failed to add plotline:", e);
+    }
   };
 
   const handleAddScene = async (chapterId: string, plotlineId: string) => {
-    const scene = await timelineAction({
-      action: "addScene",
-      bookId,
-      chapterId,
-      plotlineId,
-    });
-    setScenes((prev) => [...prev, { ...scene, google_doc: null }]);
+    try {
+      const scene = await timelineAction({
+        action: "addScene",
+        bookId,
+        chapterId,
+        plotlineId,
+      });
+      setScenes((prev) => [...prev, { ...scene, google_doc: null }]);
+    } catch (e) {
+      console.error("Failed to add scene:", e);
+    }
   };
 
   const handleUpdateScene = async (id: string, data: Partial<Scene>) => {
-    const updated = await timelineAction({ action: "updateScene", id, data });
-    setScenes((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
-    );
-    if (selectedScene?.id === id) {
-      setSelectedScene((prev) => (prev ? { ...prev, ...updated } : null));
+    try {
+      const updated = await timelineAction({ action: "updateScene", id, data });
+      setScenes((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+      );
+      if (selectedScene?.id === id) {
+        setSelectedScene((prev) => (prev ? { ...prev, ...updated } : null));
+      }
+    } catch (e) {
+      console.error("Failed to update scene:", e);
     }
   };
 
   const handleDeleteScene = async (id: string) => {
-    await timelineAction({ action: "deleteScene", id });
-    setScenes((prev) => prev.filter((s) => s.id !== id));
-    if (selectedScene?.id === id) setSelectedScene(null);
+    try {
+      await timelineAction({ action: "deleteScene", id });
+      setScenes((prev) => prev.filter((s) => s.id !== id));
+      if (selectedScene?.id === id) setSelectedScene(null);
+    } catch (e) {
+      console.error("Failed to delete scene:", e);
+    }
   };
 
   const handleRenameChapter = async (id: string, title: string) => {
-    await timelineAction({ action: "updateChapter", id, title });
-    setChapters((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, title } : c))
-    );
-    setEditingChapter(null);
+    try {
+      await timelineAction({ action: "updateChapter", id, title });
+      setChapters((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, title } : c))
+      );
+      setEditingChapter(null);
+    } catch (e) {
+      console.error("Failed to rename chapter:", e);
+    }
   };
 
   const handleDeleteChapter = async (id: string) => {
-    const scenesInChapter = scenes.filter((s) => s.chapter_id === id);
-    if (scenesInChapter.length > 0) {
-      if (
-        !confirm(
-          `This chapter has ${scenesInChapter.length} scene(s). Delete anyway?`
+    try {
+      const scenesInChapter = scenes.filter((s) => s.chapter_id === id);
+      if (scenesInChapter.length > 0) {
+        if (
+          !confirm(
+            `This chapter has ${scenesInChapter.length} scene(s). Delete anyway?`
+          )
         )
-      )
-        return;
+          return;
+      }
+      await timelineAction({ action: "deleteChapter", id });
+      setChapters((prev) => prev.filter((c) => c.id !== id));
+      setScenes((prev) => prev.filter((s) => s.chapter_id !== id));
+    } catch (e) {
+      console.error("Failed to delete chapter:", e);
     }
-    await timelineAction({ action: "deleteChapter", id });
-    setChapters((prev) => prev.filter((c) => c.id !== id));
-    setScenes((prev) => prev.filter((s) => s.chapter_id !== id));
   };
 
   const handleDeletePlotline = async (id: string) => {
-    const scenesInPlotline = scenes.filter((s) => s.plotline_id === id);
-    if (scenesInPlotline.length > 0) {
-      if (
-        !confirm(
-          `This plotline has ${scenesInPlotline.length} scene(s). Delete anyway?`
+    try {
+      const scenesInPlotline = scenes.filter((s) => s.plotline_id === id);
+      if (scenesInPlotline.length > 0) {
+        if (
+          !confirm(
+            `This plotline has ${scenesInPlotline.length} scene(s). Delete anyway?`
+          )
         )
-      )
-        return;
+          return;
+      }
+      await timelineAction({ action: "deletePlotline", id });
+      setPlotlines((prev) => prev.filter((p) => p.id !== id));
+      setScenes((prev) => prev.filter((s) => s.plotline_id !== id));
+    } catch (e) {
+      console.error("Failed to delete plotline:", e);
     }
-    await timelineAction({ action: "deletePlotline", id });
-    setPlotlines((prev) => prev.filter((p) => p.id !== id));
-    setScenes((prev) => prev.filter((s) => s.plotline_id !== id));
   };
 
   const handleMoveScene = async (
@@ -178,20 +210,24 @@ export function TimelineGrid({
     newChapterId: string,
     newPlotlineId: string
   ) => {
-    await timelineAction({
-      action: "moveScene",
-      sceneId,
-      chapterId: newChapterId,
-      plotlineId: newPlotlineId,
-      position: 0,
-    });
-    setScenes((prev) =>
-      prev.map((s) =>
-        s.id === sceneId
-          ? { ...s, chapter_id: newChapterId, plotline_id: newPlotlineId }
-          : s
-      )
-    );
+    try {
+      await timelineAction({
+        action: "moveScene",
+        sceneId,
+        chapterId: newChapterId,
+        plotlineId: newPlotlineId,
+        position: 0,
+      });
+      setScenes((prev) =>
+        prev.map((s) =>
+          s.id === sceneId
+            ? { ...s, chapter_id: newChapterId, plotline_id: newPlotlineId }
+            : s
+        )
+      );
+    } catch (e) {
+      console.error("Failed to move scene:", e);
+    }
   };
 
   // --- Drag and Drop ---

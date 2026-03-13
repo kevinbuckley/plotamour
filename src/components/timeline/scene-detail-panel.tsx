@@ -82,9 +82,9 @@ export function SceneDetailPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getSceneCharacters", sceneId: scene.id }),
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch characters"); return r.json(); })
       .then(setLinkedCharacterIds)
-      .catch(() => {});
+      .catch((e) => console.error("Failed to load scene characters:", e));
 
     // Fetch linked places
     fetch("/api/places", {
@@ -92,9 +92,9 @@ export function SceneDetailPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getScenePlaces", sceneId: scene.id }),
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch places"); return r.json(); })
       .then(setLinkedPlaceIds)
-      .catch(() => {});
+      .catch((e) => console.error("Failed to load scene places:", e));
 
     // Fetch tags
     fetch("/api/tags", {
@@ -102,9 +102,9 @@ export function SceneDetailPanel({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getSceneTags", sceneId: scene.id }),
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
       .then(setTagIds)
-      .catch(() => {});
+      .catch((e) => console.error("Failed to load scene tags:", e));
   }, [scene.id, scene.title, scene.summary, scene.conflict]);
 
   const handleSave = async () => {
@@ -147,59 +147,89 @@ export function SceneDetailPanel({
   };
 
   const handleLinkCharacter = async (characterId: string) => {
-    await fetch("/api/characters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "linkToScene", sceneId: scene.id, characterId }),
-    });
-    setLinkedCharacterIds((prev) => [...prev, characterId]);
-    setShowCharacterPicker(false);
+    try {
+      const res = await fetch("/api/characters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "linkToScene", sceneId: scene.id, characterId }),
+      });
+      if (!res.ok) throw new Error("Failed to link character");
+      setLinkedCharacterIds((prev) => [...prev, characterId]);
+      setShowCharacterPicker(false);
+    } catch (e) {
+      console.error("Failed to link character:", e);
+    }
   };
 
   const handleUnlinkCharacter = async (characterId: string) => {
-    await fetch("/api/characters", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "unlinkFromScene", sceneId: scene.id, characterId }),
-    });
-    setLinkedCharacterIds((prev) => prev.filter((id) => id !== characterId));
+    try {
+      const res = await fetch("/api/characters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "unlinkFromScene", sceneId: scene.id, characterId }),
+      });
+      if (!res.ok) throw new Error("Failed to unlink character");
+      setLinkedCharacterIds((prev) => prev.filter((id) => id !== characterId));
+    } catch (e) {
+      console.error("Failed to unlink character:", e);
+    }
   };
 
   const handleLinkPlace = async (placeId: string) => {
-    await fetch("/api/places", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "linkToScene", sceneId: scene.id, placeId }),
-    });
-    setLinkedPlaceIds((prev) => [...prev, placeId]);
-    setShowPlacePicker(false);
+    try {
+      const res = await fetch("/api/places", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "linkToScene", sceneId: scene.id, placeId }),
+      });
+      if (!res.ok) throw new Error("Failed to link place");
+      setLinkedPlaceIds((prev) => [...prev, placeId]);
+      setShowPlacePicker(false);
+    } catch (e) {
+      console.error("Failed to link place:", e);
+    }
   };
 
   const handleUnlinkPlace = async (placeId: string) => {
-    await fetch("/api/places", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "unlinkFromScene", sceneId: scene.id, placeId }),
-    });
-    setLinkedPlaceIds((prev) => prev.filter((id) => id !== placeId));
+    try {
+      const res = await fetch("/api/places", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "unlinkFromScene", sceneId: scene.id, placeId }),
+      });
+      if (!res.ok) throw new Error("Failed to unlink place");
+      setLinkedPlaceIds((prev) => prev.filter((id) => id !== placeId));
+    } catch (e) {
+      console.error("Failed to unlink place:", e);
+    }
   };
 
   const handleAddTag = async (tagId: string) => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "addToScene", sceneId: scene.id, tagId }),
-    });
-    setTagIds((prev) => [...prev, tagId]);
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "addToScene", sceneId: scene.id, tagId }),
+      });
+      if (!res.ok) throw new Error("Failed to add tag");
+      setTagIds((prev) => [...prev, tagId]);
+    } catch (e) {
+      console.error("Failed to add tag:", e);
+    }
   };
 
   const handleRemoveTag = async (tagId: string) => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "removeFromScene", sceneId: scene.id, tagId }),
-    });
-    setTagIds((prev) => prev.filter((id) => id !== tagId));
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "removeFromScene", sceneId: scene.id, tagId }),
+      });
+      if (!res.ok) throw new Error("Failed to remove tag");
+      setTagIds((prev) => prev.filter((id) => id !== tagId));
+    } catch (e) {
+      console.error("Failed to remove tag:", e);
+    }
   };
 
   const unlinkedCharacters = characters.filter(

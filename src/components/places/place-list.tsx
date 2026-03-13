@@ -34,26 +34,38 @@ export function PlaceList({
   const selectedPlace = places.find((p) => p.id === selectedId) ?? null;
 
   const handleCreate = async () => {
-    const place = await placeAction({
-      action: "create",
-      projectId,
-      name: "New Place",
-    });
-    setPlaces((prev) => [...prev, place]);
-    setSelectedId(place.id);
+    try {
+      const place = await placeAction({
+        action: "create",
+        projectId,
+        name: "New Place",
+      });
+      setPlaces((prev) => [...prev, place]);
+      setSelectedId(place.id);
+    } catch (e) {
+      console.error("Failed to create place:", e);
+    }
   };
 
   const handleUpdate = async (id: string, data: Partial<Place>) => {
-    const updated = await placeAction({ action: "update", id, data });
-    setPlaces((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
-    );
+    try {
+      const updated = await placeAction({ action: "update", id, data });
+      setPlaces((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...updated } : p))
+      );
+    } catch (e) {
+      console.error("Failed to update place:", e);
+    }
   };
 
   const handleDelete = async (id: string) => {
-    await placeAction({ action: "delete", id });
-    setPlaces((prev) => prev.filter((p) => p.id !== id));
-    if (selectedId === id) setSelectedId(null);
+    try {
+      await placeAction({ action: "delete", id });
+      setPlaces((prev) => prev.filter((p) => p.id !== id));
+      if (selectedId === id) setSelectedId(null);
+    } catch (e) {
+      console.error("Failed to delete place:", e);
+    }
   };
 
   return (
