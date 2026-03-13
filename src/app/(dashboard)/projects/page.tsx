@@ -2,6 +2,7 @@ import { createClient } from "@/lib/db/server";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Upload } from "lucide-react";
+import { ProjectCard } from "@/components/projects/project-card";
 
 /** Generate a stable hue from a project ID for the card accent strip */
 function getProjectHue(id: string): number {
@@ -11,18 +12,6 @@ function getProjectHue(id: string): number {
   }
   // Keep hues in the blue-violet-pink range (220–330) to match the app palette
   return 220 + (Math.abs(hash) % 110);
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export default async function ProjectsPage() {
@@ -70,57 +59,17 @@ export default async function ProjectsPage() {
 
       {hasProjects ? (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => {
-            const hue = getProjectHue(project.id);
-            return (
-              <Link
-                key={project.id}
-                href={`/project/${project.id}/timeline`}
-                className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_8px_24px_oklch(0.488_0.183_274.376/0.10)] hover:border-border/80"
-                style={{
-                  ["--card-hue" as string]: `${hue}`,
-                }}
-              >
-                {/* Color accent strip */}
-                <div
-                  className="h-[3px] w-full shrink-0"
-                  style={{
-                    background: `linear-gradient(90deg, hsl(${hue}, 70%, 55%), hsl(${hue + 30}, 75%, 62%))`,
-                  }}
-                />
-
-                {/* Card body */}
-                <div className="flex flex-1 flex-col p-5">
-                  <h2 className="text-[15px] font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
-                    {project.title}
-                  </h2>
-                  {project.description ? (
-                    <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                      {project.description}
-                    </p>
-                  ) : (
-                    <p className="mt-1.5 text-sm italic text-muted-foreground/50">No description</p>
-                  )}
-
-                  {/* Meta row */}
-                  <div className="mt-auto flex items-center justify-between pt-4">
-                    <span
-                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold capitalize tracking-wide"
-                      style={{
-                        backgroundColor: `hsl(${hue}, 70%, 94%)`,
-                        color: `hsl(${hue}, 55%, 38%)`,
-                      }}
-                    >
-                      {project.project_type}
-                    </span>
-                    <span className="text-xs text-muted-foreground/70">
-                      {formatDate(project.updated_at)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              id={project.id}
+              title={project.title}
+              description={project.description}
+              projectType={project.project_type}
+              updatedAt={project.updated_at}
+              hue={getProjectHue(project.id)}
+            />
+          ))}
         </div>
       ) : (
         /* Empty state */
