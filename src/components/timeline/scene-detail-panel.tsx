@@ -76,36 +76,43 @@ export function SceneDetailPanel({
     setSummary(scene.summary);
     setConflict(scene.conflict);
 
+    const controller = new AbortController();
+
     // Fetch linked characters
     fetch("/api/characters", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getSceneCharacters", sceneId: scene.id }),
+      signal: controller.signal,
     })
       .then((r) => { if (!r.ok) throw new Error("Failed to fetch characters"); return r.json(); })
       .then(setLinkedCharacterIds)
-      .catch((e) => console.error("Failed to load scene characters:", e));
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load scene characters:", e); });
 
     // Fetch linked places
     fetch("/api/places", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getScenePlaces", sceneId: scene.id }),
+      signal: controller.signal,
     })
       .then((r) => { if (!r.ok) throw new Error("Failed to fetch places"); return r.json(); })
       .then(setLinkedPlaceIds)
-      .catch((e) => console.error("Failed to load scene places:", e));
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load scene places:", e); });
 
     // Fetch tags
     fetch("/api/tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getSceneTags", sceneId: scene.id }),
+      signal: controller.signal,
     })
       .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
       .then(setTagIds)
-      .catch((e) => console.error("Failed to load scene tags:", e));
-  }, [scene.id, scene.title, scene.summary, scene.conflict]);
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load scene tags:", e); });
+
+    return () => controller.abort();
+  }, [scene.id]);
 
   const handleSave = async () => {
     await onUpdate(scene.id, { title, summary, conflict });

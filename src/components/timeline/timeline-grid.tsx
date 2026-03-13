@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
 import { PLOTLINE_COLORS } from "@/lib/config/constants";
 import type {
@@ -355,7 +355,7 @@ export function TimelineGrid({
 
             {/* Plotline rows */}
             {plotlines.map((plotline) => (
-              <>
+              <React.Fragment key={plotline.id}>
                 {/* Plotline header */}
                 <div
                   key={`header-${plotline.id}`}
@@ -372,35 +372,37 @@ export function TimelineGrid({
                       defaultValue={plotline.title}
                       autoFocus
                       onBlur={(e) => {
-                        timelineAction({
-                          action: "updatePlotline",
-                          id: plotline.id,
-                          title: e.target.value,
-                        });
+                        const newTitle = e.target.value;
                         setPlotlines((prev) =>
                           prev.map((p) =>
                             p.id === plotline.id
-                              ? { ...p, title: e.target.value }
+                              ? { ...p, title: newTitle }
                               : p
                           )
                         );
                         setEditingPlotline(null);
+                        timelineAction({
+                          action: "updatePlotline",
+                          id: plotline.id,
+                          title: newTitle,
+                        }).catch((err) => console.error("Failed to rename plotline:", err));
                       }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
-                          timelineAction({
-                            action: "updatePlotline",
-                            id: plotline.id,
-                            title: e.currentTarget.value,
-                          });
+                          const newTitle = e.currentTarget.value;
                           setPlotlines((prev) =>
                             prev.map((p) =>
                               p.id === plotline.id
-                                ? { ...p, title: e.currentTarget.value }
+                                ? { ...p, title: newTitle }
                                 : p
                             )
                           );
                           setEditingPlotline(null);
+                          timelineAction({
+                            action: "updatePlotline",
+                            id: plotline.id,
+                            title: newTitle,
+                          }).catch((err) => console.error("Failed to rename plotline:", err));
                         }
                         if (e.key === "Escape") setEditingPlotline(null);
                       }}
@@ -477,7 +479,7 @@ export function TimelineGrid({
 
                 {/* Empty cell at end of plotline row */}
                 <div key={`end-${plotline.id}`} />
-              </>
+              </React.Fragment>
             ))}
 
             {/* Add plotline row */}

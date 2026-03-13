@@ -50,12 +50,17 @@ export function SeriesDashboard({ project, books: initialBooks }: SeriesDashboar
     }
     if (!confirm(`Delete "${bookTitle}"? This will remove all its chapters, plotlines, and scenes.`)) return;
 
-    await fetch("/api/books", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", id: bookId }),
-    });
-    setBooks((prev) => prev.filter((b) => b.id !== bookId));
+    try {
+      const res = await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id: bookId }),
+      });
+      if (!res.ok) throw new Error("Failed to delete book");
+      setBooks((prev) => prev.filter((b) => b.id !== bookId));
+    } catch (e) {
+      console.error("Failed to delete book:", e);
+    }
   };
 
   const handleOpenBook = (bookId: string) => {

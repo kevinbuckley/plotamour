@@ -60,45 +60,63 @@ export function CharacterDetail({
       (character.custom_attributes as Record<string, string>) ?? {}
     );
 
+    const controller = new AbortController();
+
     // Fetch tags and scenes
     fetch("/api/tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getCharacterTags", characterId: character.id }),
+      signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
       .then(setTagIds)
-      .catch(() => {});
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load character tags:", e); });
 
     fetch("/api/characters", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getCharacterScenes", characterId: character.id }),
+      signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch scenes"); return r.json(); })
       .then(setSceneIds)
-      .catch(() => {});
-  }, [character.id, character.name, character.description, character.custom_attributes]);
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load character scenes:", e); });
+
+    return () => controller.abort();
+  }, [character.id]);
 
   const handleSave = async () => {
-    await onUpdate(character.id, { name, description });
+    try {
+      await onUpdate(character.id, { name, description });
+    } catch (e) {
+      console.error("Failed to save character:", e);
+    }
   };
 
   const handleSaveAttribute = async (key: string, value: string) => {
     const updated = { ...attributes, [key]: value };
     setAttributes(updated);
-    await onUpdate(character.id, {
-      custom_attributes: updated as Record<string, unknown>,
-    });
+    try {
+      await onUpdate(character.id, {
+        custom_attributes: updated as Record<string, unknown>,
+      });
+    } catch (e) {
+      console.error("Failed to save attribute:", e);
+    }
   };
 
   const handleDeleteAttribute = async (key: string) => {
     const updated = { ...attributes };
     delete updated[key];
     setAttributes(updated);
-    await onUpdate(character.id, {
-      custom_attributes: updated as Record<string, unknown>,
-    });
+    try {
+      await onUpdate(character.id, {
+        custom_attributes: updated as Record<string, unknown>,
+      });
+    } catch (e) {
+      console.error("Failed to delete attribute:", e);
+    }
   };
 
   const handleAddAttribute = () => {
@@ -109,29 +127,39 @@ export function CharacterDetail({
   };
 
   const handleAddTag = async (tagId: string) => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "addToCharacter",
-        characterId: character.id,
-        tagId,
-      }),
-    });
-    setTagIds((prev) => [...prev, tagId]);
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "addToCharacter",
+          characterId: character.id,
+          tagId,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to add tag");
+      setTagIds((prev) => [...prev, tagId]);
+    } catch (e) {
+      console.error("Failed to add tag:", e);
+    }
   };
 
   const handleRemoveTag = async (tagId: string) => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "removeFromCharacter",
-        characterId: character.id,
-        tagId,
-      }),
-    });
-    setTagIds((prev) => prev.filter((id) => id !== tagId));
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "removeFromCharacter",
+          characterId: character.id,
+          tagId,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to remove tag");
+      setTagIds((prev) => prev.filter((id) => id !== tagId));
+    } catch (e) {
+      console.error("Failed to remove tag:", e);
+    }
   };
 
   const avatarColor = getAvatarColor(character.name);

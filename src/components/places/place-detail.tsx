@@ -43,44 +43,62 @@ export function PlaceDetail({
       (place.custom_attributes as Record<string, string>) ?? {}
     );
 
+    const controller = new AbortController();
+
     fetch("/api/tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getPlaceTags", placeId: place.id }),
+      signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
       .then(setTagIds)
-      .catch(() => {});
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load place tags:", e); });
 
     fetch("/api/places", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getPlaceScenes", placeId: place.id }),
+      signal: controller.signal,
     })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch scenes"); return r.json(); })
       .then(setSceneIds)
-      .catch(() => {});
-  }, [place.id, place.name, place.description, place.custom_attributes]);
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load place scenes:", e); });
+
+    return () => controller.abort();
+  }, [place.id]);
 
   const handleSave = async () => {
-    await onUpdate(place.id, { name, description });
+    try {
+      await onUpdate(place.id, { name, description });
+    } catch (e) {
+      console.error("Failed to save place:", e);
+    }
   };
 
   const handleSaveAttribute = async (key: string, value: string) => {
     const updated = { ...attributes, [key]: value };
     setAttributes(updated);
-    await onUpdate(place.id, {
-      custom_attributes: updated as Record<string, unknown>,
-    });
+    try {
+      await onUpdate(place.id, {
+        custom_attributes: updated as Record<string, unknown>,
+      });
+    } catch (e) {
+      console.error("Failed to save attribute:", e);
+    }
   };
 
   const handleDeleteAttribute = async (key: string) => {
     const updated = { ...attributes };
     delete updated[key];
     setAttributes(updated);
-    await onUpdate(place.id, {
-      custom_attributes: updated as Record<string, unknown>,
-    });
+    try {
+      await onUpdate(place.id, {
+        custom_attributes: updated as Record<string, unknown>,
+      });
+    } catch (e) {
+      console.error("Failed to delete attribute:", e);
+    }
   };
 
   const handleAddAttribute = () => {
@@ -90,29 +108,39 @@ export function PlaceDetail({
   };
 
   const handleAddTag = async (tagId: string) => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "addToPlace",
-        placeId: place.id,
-        tagId,
-      }),
-    });
-    setTagIds((prev) => [...prev, tagId]);
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "addToPlace",
+          placeId: place.id,
+          tagId,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to add tag");
+      setTagIds((prev) => [...prev, tagId]);
+    } catch (e) {
+      console.error("Failed to add tag:", e);
+    }
   };
 
   const handleRemoveTag = async (tagId: string) => {
-    await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "removeFromPlace",
-        placeId: place.id,
-        tagId,
-      }),
-    });
-    setTagIds((prev) => prev.filter((id) => id !== tagId));
+    try {
+      const res = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "removeFromPlace",
+          placeId: place.id,
+          tagId,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to remove tag");
+      setTagIds((prev) => prev.filter((id) => id !== tagId));
+    } catch (e) {
+      console.error("Failed to remove tag:", e);
+    }
   };
 
   return (

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils/cn";
 import { BookSelector } from "@/components/series/book-selector";
+import { SidebarLink } from "@/components/shared/sidebar-link";
 import { createClient } from "@/lib/db/server";
 import type { Book, ProjectType } from "@/lib/types/database";
 
@@ -8,7 +8,6 @@ interface AppSidebarProps {
   projectId?: string;
   projectType?: ProjectType;
   books?: Book[];
-  currentView?: string;
   currentBookId?: string;
 }
 
@@ -30,7 +29,6 @@ export async function AppSidebar({
   projectId,
   projectType,
   books,
-  currentView,
   currentBookId,
 }: AppSidebarProps) {
   const isSeries = projectType === "series";
@@ -73,7 +71,7 @@ export async function AppSidebar({
         <SidebarLink
           href="/projects"
           label="All Projects"
-          active={!projectId}
+          exact
           icon={
             <path
               strokeLinecap="round"
@@ -105,7 +103,6 @@ export async function AppSidebar({
               <SidebarLink
                 href={`/project/${projectId}/series`}
                 label="Series Overview"
-                active={currentView === "series"}
                 icon={
                   <path
                     strokeLinecap="round"
@@ -119,7 +116,6 @@ export async function AppSidebar({
             <SidebarLink
               href={`/project/${projectId}/timeline`}
               label="Timeline"
-              active={currentView === "timeline"}
               icon={
                 <path
                   strokeLinecap="round"
@@ -131,7 +127,6 @@ export async function AppSidebar({
             <SidebarLink
               href={`/project/${projectId}/outline`}
               label="Outline"
-              active={currentView === "outline"}
               icon={
                 <path
                   strokeLinecap="round"
@@ -143,7 +138,6 @@ export async function AppSidebar({
             <SidebarLink
               href={`/project/${projectId}/characters`}
               label="Characters"
-              active={currentView === "characters"}
               icon={
                 <path
                   strokeLinecap="round"
@@ -155,7 +149,6 @@ export async function AppSidebar({
             <SidebarLink
               href={`/project/${projectId}/places`}
               label="Places"
-              active={currentView === "places"}
               icon={
                 <path
                   strokeLinecap="round"
@@ -167,7 +160,6 @@ export async function AppSidebar({
             <SidebarLink
               href={`/project/${projectId}/notes`}
               label="Notes"
-              active={currentView === "notes"}
               icon={
                 <path
                   strokeLinecap="round"
@@ -211,40 +203,5 @@ export async function AppSidebar({
         </div>
       </div>
     </aside>
-  );
-}
-
-function SidebarLink({
-  href,
-  label,
-  active,
-  icon,
-}: {
-  href: string;
-  label: string;
-  active: boolean;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "flex items-center gap-2.5 rounded-md py-2 text-sm transition-all duration-150",
-        active
-          ? "border-l-[3px] border-primary bg-primary/[0.08] pl-[9px] pr-3 font-semibold text-primary"
-          : "px-3 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-      )}
-    >
-      <svg
-        className={cn("h-4 w-4 shrink-0 transition-colors", active ? "text-primary" : "")}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        {icon}
-      </svg>
-      {label}
-    </Link>
   );
 }
