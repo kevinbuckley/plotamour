@@ -3,6 +3,14 @@
 import { createClient } from "@/lib/db/server";
 import type { SceneGoogleDoc } from "@/lib/types/database";
 
+/** Thrown when Google returns 401/403, indicating missing or insufficient OAuth scopes. */
+export class GoogleAuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "GoogleAuthError";
+  }
+}
+
 interface GoogleTokens {
   access_token: string;
   refresh_token: string;
@@ -18,20 +26,12 @@ async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
 
   if (!profile?.google_refresh_token) {
     console.error("[GoogleDocs] No refresh token found in profile for user:", userId);
-    return null;
+    throw new GoogleAuthError("No Google refresh token — user needs to connect Google Docs.");
   }
 
-  // Try session provider_token first (available right after OAuth login)
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.provider_token) {
-    console.log("[GoogleDocs] Using session provider_token");
-    return {
-      access_token: session.provider_token,
-      refresh_token: profile.google_refresh_token,
-    };
-  }
-
-  // Fallback: use refresh token to get a fresh access token from Google
+  // Always use the stored refresh token to get an access token with the correct
+  // Google Docs scopes. The session provider_token comes from the initial login
+  // which may NOT include Docs scopes — using it causes 403 SCOPE_INSUFFICIENT.
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     console.error("[GoogleDocs] GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set");
     return null;
@@ -52,7 +52,8 @@ async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
   if (!res.ok) {
     const errBody = await res.text();
     console.error("[GoogleDocs] Token refresh failed:", res.status, errBody);
-    return null;
+    // If the refresh token is invalid/revoked, user needs to reconnect
+    throw new GoogleAuthError("Google token refresh failed — user needs to reconnect Google Docs.");
   }
 
   const tokenData = await res.json();
@@ -80,6 +81,7 @@ export async function createDocForScene(input: {
     return null;
   }
 
+  // getGoogleTokens throws GoogleAuthError if tokens are missing/invalid
   const tokens = await getGoogleTokens(user.id);
   if (!tokens) {
     console.error("[GoogleDocs] Could not obtain Google tokens");
@@ -112,6 +114,9 @@ export async function createDocForScene(input: {
     if (!createRes.ok) {
       const errBody = await createRes.text();
       console.error("[GoogleDocs] Doc creation failed:", createRes.status, errBody);
+      if (createRes.status === 401 || createRes.status === 403) {
+        throw new GoogleAuthError("Google Docs API returned " + createRes.status + " — insufficient scopes.");
+      }
       return null;
     }
     const doc = await createRes.json();
@@ -166,7 +171,8 @@ export async function createDocForScene(input: {
 
     if (error) throw error;
     return data;
-  } catch {
+  } catch (err) {
+    if (err instanceof GoogleAuthError) throw err;
     return null;
   }
 }

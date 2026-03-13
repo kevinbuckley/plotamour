@@ -1,4 +1,4 @@
-import { createDocForScene, getDocForScene, syncDocMetadata } from "@/lib/services/google-docs";
+import { createDocForScene, getDocForScene, syncDocMetadata, GoogleAuthError } from "@/lib/services/google-docs";
 import { getScene } from "@/lib/services/scenes";
 import { createClient } from "@/lib/db/server";
 import { NextResponse } from "next/server";
@@ -30,34 +30,35 @@ export async function POST(request: Request) {
 
         const chapterIndex = chapters?.findIndex((c) => c.id === scene.chapter_id) ?? 0;
 
-        const doc = await createDocForScene({
-          sceneId: scene.id,
-          bookTitle: book?.title ?? "Untitled",
-          chapterNumber: chapterIndex + 1,
-          sceneTitle: scene.title,
-          summary: scene.summary || undefined,
-        });
+        try {
+          const doc = await createDocForScene({
+            sceneId: scene.id,
+            bookTitle: book?.title ?? "Untitled",
+            chapterNumber: chapterIndex + 1,
+            sceneTitle: scene.title,
+            summary: scene.summary || undefined,
+          });
 
-        if (!doc) {
-          // Check if the problem is missing auth (no stored refresh token)
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("google_refresh_token")
-            .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
-            .single();
-          const needsReconnect = !profile?.google_refresh_token;
-          return NextResponse.json(
-            {
-              error: needsReconnect
-                ? "Google Docs access not connected."
-                : "Failed to create Google Doc. Please try again.",
-              needsReconnect,
-            },
-            { status: 400 }
-          );
+          if (!doc) {
+            return NextResponse.json(
+              { error: "Failed to create Google Doc. Please try again." },
+              { status: 400 }
+            );
+          }
+
+          return NextResponse.json({ url: doc.google_doc_url, doc });
+        } catch (err) {
+          if (err instanceof GoogleAuthError) {
+            return NextResponse.json(
+              {
+                error: "Google Docs access not connected. Please connect your Google account.",
+                needsReconnect: true,
+              },
+              { status: 400 }
+            );
+          }
+          throw err;
         }
-
-        return NextResponse.json({ url: doc.google_doc_url, doc });
       }
 
       case "syncDoc": {
