@@ -80,7 +80,7 @@ export async function deleteScene(id: string): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase
     .from("scenes")
-    .update({ deleted_at: new Date().toISOString() })
+    .delete()
     .eq("id", id);
 
   if (error) throw error;
