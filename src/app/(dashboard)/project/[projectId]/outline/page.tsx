@@ -23,10 +23,10 @@ export default async function OutlinePage({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-border px-6 py-3">
+      <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
         <div>
-          <h1 className="text-lg font-semibold">{project.title}</h1>
-          <p className="text-xs text-muted-foreground">Outline</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Outline</p>
+          <h1 className="mt-0.5 text-[15px] font-semibold tracking-tight">{project.title}</h1>
         </div>
       </div>
       <div className="flex-1 overflow-auto">

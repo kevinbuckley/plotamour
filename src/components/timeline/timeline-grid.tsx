@@ -254,7 +254,7 @@ export function TimelineGrid({
                 className="group flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm"
               >
                 {/* Chapter number badge */}
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[10px] font-bold text-primary">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary">
                   {idx + 1}
                 </span>
 
@@ -323,11 +323,11 @@ export function TimelineGrid({
                 {/* Plotline header */}
                 <div
                   key={`header-${plotline.id}`}
-                  className="group relative flex items-center gap-2.5 overflow-hidden rounded-lg border border-border px-3 py-2.5 shadow-sm"
-                  style={{ backgroundColor: `${plotline.color}12` }}
+                  className="group relative flex items-center gap-2.5 overflow-hidden rounded-lg border border-border pl-3.5 pr-3 py-2.5 shadow-sm"
+                  style={{ backgroundColor: `${plotline.color}10`, borderLeftColor: plotline.color, borderLeftWidth: "3px" }}
                 >
                   <div
-                    className="h-3 w-3 shrink-0 rounded-full shadow-sm"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full shadow-sm"
                     style={{ backgroundColor: plotline.color }}
                   />
                   {editingPlotline === plotline.id ? (
@@ -456,13 +456,14 @@ export function TimelineGrid({
         </div>
 
         {/* Drag overlay — the ghost card that follows the cursor */}
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeScene && (
             <div
-              className="w-[188px] overflow-hidden rounded-lg border border-border bg-card p-2.5 shadow-xl"
+              className="w-[188px] rotate-2 overflow-hidden rounded-lg border border-border bg-card p-2.5 opacity-95 shadow-2xl"
               style={{
                 borderLeftColor: activePlotline?.color ?? "#6366f1",
                 borderLeftWidth: "4px",
+                backgroundColor: activePlotline ? `${activePlotline.color}0d` : undefined,
               }}
             >
               <span className="line-clamp-2 text-sm font-medium leading-snug">

@@ -48,13 +48,16 @@ export function CardListSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-lg border border-border p-5">
-          <Skeleton className="h-5 w-2/3" />
-          <Skeleton className="mt-2 h-4 w-full" />
-          <Skeleton className="mt-1 h-4 w-4/5" />
-          <div className="mt-3 flex gap-2">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-20" />
+        <div key={i} className="overflow-hidden rounded-xl border border-border shadow-sm">
+          <Skeleton className="h-[3px] w-full rounded-none" />
+          <div className="p-5">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="mt-2 h-4 w-full" />
+            <Skeleton className="mt-1 h-4 w-4/5" />
+            <div className="mt-4 flex gap-2">
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="ml-auto h-4 w-14" />
+            </div>
           </div>
         </div>
       ))}

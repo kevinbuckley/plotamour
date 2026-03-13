@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 import { BookSelector } from "@/components/series/book-selector";
+import { createClient } from "@/lib/db/server";
 import type { Book, ProjectType } from "@/lib/types/database";
 
 interface AppSidebarProps {
@@ -11,7 +12,21 @@ interface AppSidebarProps {
   currentBookId?: string;
 }
 
-export function AppSidebar({
+/** Deterministic avatar color from a string (name or email) */
+function getAvatarStyle(seed: string): { bg: string; text: string } {
+  const COLORS = [
+    { bg: "oklch(0.92 0.06 274)", text: "oklch(0.38 0.15 274)" },   // indigo
+    { bg: "oklch(0.91 0.06 310)", text: "oklch(0.40 0.16 310)" },   // violet
+    { bg: "oklch(0.93 0.06 180)", text: "oklch(0.40 0.12 180)" },   // teal
+    { bg: "oklch(0.93 0.07 240)", text: "oklch(0.38 0.14 240)" },   // blue
+    { bg: "oklch(0.94 0.07 340)", text: "oklch(0.42 0.17 340)" },   // rose
+  ];
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
+
+export async function AppSidebar({
   projectId,
   projectType,
   books,
@@ -21,15 +36,24 @@ export function AppSidebar({
   const isSeries = projectType === "series";
   const firstBookId = books?.[0]?.id;
 
+  // Fetch user for bottom section
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const fullName = user?.user_metadata?.full_name as string | undefined;
+  const email = user?.email ?? "";
+  const displayName = fullName ?? email.split("@")[0];
+  const initial = displayName.charAt(0).toUpperCase();
+  const avatarStyle = getAvatarStyle(email || displayName);
+
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
-      <div className="flex items-center px-4 py-4">
+      <div className="flex items-center border-b border-sidebar-border/60 px-4 py-4">
         <Link
           href="/projects"
-          className="flex items-center gap-2 group"
+          className="group flex items-center gap-2"
         >
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary shadow-sm transition-shadow group-hover:shadow-md">
             <svg
               className="h-4 w-4 text-primary-foreground"
               fill="currentColor"
@@ -45,7 +69,7 @@ export function AppSidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 px-2 py-2">
+      <nav className="flex-1 space-y-0.5 px-2 py-3">
         <SidebarLink
           href="/projects"
           label="All Projects"
@@ -72,7 +96,7 @@ export function AppSidebar({
               </div>
             )}
 
-            <div className="px-3 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+            <div className="px-3 pt-5 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               {isSeries ? "Current Book" : "Project"}
             </div>
 
@@ -156,29 +180,35 @@ export function AppSidebar({
         )}
       </nav>
 
-      {/* User section at bottom */}
-      <div className="border-t border-sidebar-border p-3">
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+      {/* User section */}
+      <div className="border-t border-sidebar-border bg-sidebar-accent/30 p-3">
+        <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
+          {/* Avatar */}
+          <div
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold shadow-sm"
+            style={{ backgroundColor: avatarStyle.bg, color: avatarStyle.text }}
           >
-            <svg
-              className="h-4 w-4 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+            {initial}
+          </div>
+          {/* Name + email */}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-semibold text-foreground/80 leading-none">
+              {displayName}
+            </p>
+          </div>
+          {/* Sign out icon button */}
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              title="Sign out"
+              className="rounded-md p-1.5 text-muted-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-foreground"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-              />
-            </svg>
-            Sign out
-          </button>
-        </form>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </form>
+        </div>
       </div>
     </aside>
   );
@@ -199,10 +229,10 @@ function SidebarLink({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-150",
+        "flex items-center gap-2.5 rounded-md py-2 text-sm transition-all duration-150",
         active
-          ? "bg-primary/10 font-semibold text-primary shadow-none"
-          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+          ? "border-l-[3px] border-primary bg-primary/[0.08] pl-[9px] pr-3 font-semibold text-primary"
+          : "px-3 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
       )}
     >
       <svg

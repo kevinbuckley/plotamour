@@ -231,8 +231,10 @@ export function SceneDetailPanel({
         {/* Plotline color accent strip */}
         {currentPlotline && (
           <div
-            className="h-1 w-full shrink-0"
-            style={{ backgroundColor: currentPlotline.color }}
+            className="h-[3px] w-full shrink-0"
+            style={{
+              background: `linear-gradient(90deg, ${currentPlotline.color}, ${currentPlotline.color}bb)`,
+            }}
           />
         )}
 
@@ -267,7 +269,7 @@ export function SceneDetailPanel({
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
           {/* Title */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Title</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Title</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -277,7 +279,7 @@ export function SceneDetailPanel({
 
           {/* Summary */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Summary</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Summary</label>
             <Textarea
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
@@ -289,7 +291,7 @@ export function SceneDetailPanel({
 
           {/* Conflict */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Conflict</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Conflict</label>
             <Input
               value={conflict}
               onChange={(e) => setConflict(e.target.value)}
@@ -301,9 +303,9 @@ export function SceneDetailPanel({
           {/* Move scene */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Chapter</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Chapter</label>
               <select
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs transition-colors focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20"
                 value={scene.chapter_id}
                 onChange={(e) => onMove(scene.id, e.target.value, scene.plotline_id)}
               >
@@ -313,9 +315,9 @@ export function SceneDetailPanel({
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Plotline</label>
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Plotline</label>
               <select
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs transition-colors focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20"
                 value={scene.plotline_id}
                 onChange={(e) => onMove(scene.id, scene.chapter_id, e.target.value)}
               >
@@ -326,9 +328,12 @@ export function SceneDetailPanel({
             </div>
           </div>
 
+          {/* Divider before metadata */}
+          <div className="border-t border-border/60" />
+
           {/* Characters */}
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Characters</label>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Characters</label>
             <div className="space-y-1.5">
               {linkedCharacterIds.map((cid) => {
                 const char = characters.find((c) => c.id === cid);
@@ -403,7 +408,7 @@ export function SceneDetailPanel({
 
           {/* Places */}
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Places</label>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Places</label>
             <div className="space-y-1.5">
               {linkedPlaceIds.map((pid) => {
                 const pl = places.find((p) => p.id === pid);
@@ -467,7 +472,7 @@ export function SceneDetailPanel({
 
           {/* Tags */}
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tags</label>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Tags</label>
             <TagPicker
               allTags={tags}
               selectedTagIds={tagIds}
@@ -490,20 +495,20 @@ export function SceneDetailPanel({
             <div className="p-4">
               {doc ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${writingStatusClass[doc.writing_status] ?? "bg-gray-100 text-gray-500"}`}
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${writingStatusClass[doc.writing_status] ?? "bg-gray-100 text-gray-500"}`}
                     >
                       {writingStatusLabel[doc.writing_status] ?? doc.writing_status}
                     </span>
                     {doc.word_count > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {doc.word_count.toLocaleString()} words
+                      <span className="tabular-nums text-sm font-medium text-foreground/70">
+                        {doc.word_count.toLocaleString()} <span className="font-normal text-muted-foreground">words</span>
                       </span>
                     )}
                   </div>
                   {doc.last_synced_at && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground/70">
                       Synced {new Date(doc.last_synced_at).toLocaleString()}
                     </p>
                   )}

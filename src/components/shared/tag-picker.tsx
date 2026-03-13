@@ -95,20 +95,27 @@ export function TagPicker({
       </div>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-md border border-border bg-background p-1 shadow-lg">
-          <input
-            className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none"
-            placeholder="Search or create tag..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && availableTags.length === 0 && search.trim()) {
-                handleCreate();
-              }
-            }}
-            autoFocus
-          />
-          <div className="mt-1 max-h-40 overflow-y-auto">
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-60 overflow-hidden rounded-xl border border-border bg-background shadow-xl">
+          <div className="p-2">
+            <input
+              className="w-full rounded-lg border border-input bg-muted/50 px-3 py-1.5 text-sm placeholder:text-muted-foreground/60 focus:border-primary/40 focus:bg-background focus:outline-none transition-colors"
+              placeholder="Search or create tag..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && availableTags.length === 0 && search.trim()) {
+                  handleCreate();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <div className="max-h-44 overflow-y-auto px-1 pb-1.5">
+            {availableTags.length > 0 && (
+              <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
+                Tags
+              </p>
+            )}
             {availableTags.map((tag) => (
               <button
                 key={tag.id}
@@ -116,26 +123,31 @@ export function TagPicker({
                   onAdd(tag.id);
                   setSearch("");
                 }}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors hover:bg-accent"
               >
                 <div
-                  className="h-2.5 w-2.5 rounded-full"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full shadow-sm"
                   style={{ backgroundColor: tag.color }}
                 />
-                {tag.name}
+                <span className="flex-1 text-left">{tag.name}</span>
                 {tag.category && (
-                  <span className="ml-auto text-xs text-muted-foreground">{tag.category}</span>
+                  <span className="text-[10px] text-muted-foreground/50">{tag.category}</span>
                 )}
               </button>
             ))}
             {search.trim() && availableTags.length === 0 && (
               <button
                 onClick={handleCreate}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-primary transition-colors hover:bg-accent"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm text-primary transition-colors hover:bg-primary/8"
               >
-                <Plus className="h-3.5 w-3.5" />
-                Create &quot;{search.trim()}&quot;
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span>Create &quot;{search.trim()}&quot;</span>
               </button>
+            )}
+            {availableTags.length === 0 && !search.trim() && (
+              <p className="px-2.5 py-2 text-xs text-muted-foreground/60">
+                No more tags available. Type to create one.
+              </p>
             )}
           </div>
         </div>

@@ -42,7 +42,7 @@ function HomeContent() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col" style={{ background: "oklch(0.985 0.002 285)" }}>
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5">
         <div className="flex items-center gap-2">
@@ -57,7 +57,7 @@ function HomeContent() {
         </div>
         <button
           onClick={handleLogin}
-          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-all hover:shadow-md hover:border-primary/40"
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-all duration-150 hover:border-primary/40 hover:shadow-md hover:text-primary"
         >
           Sign in
         </button>
@@ -65,15 +65,26 @@ function HomeContent() {
 
       {/* Hero */}
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-16 pt-10">
-        {/* Gradient blob behind content */}
+        {/* Gradient atmosphere */}
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2"
           style={{
-            width: 600,
-            height: 400,
+            width: 700,
+            height: 500,
             background:
-              "radial-gradient(ellipse at center, oklch(0.488 0.183 274.376 / 0.08) 0%, transparent 70%)",
+              "radial-gradient(ellipse at center, oklch(0.488 0.183 274.376 / 0.10) 0%, transparent 70%)",
+            filter: "blur(50px)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-[60%] top-[30%] -translate-y-1/2"
+          style={{
+            width: 400,
+            height: 300,
+            background:
+              "radial-gradient(ellipse at center, oklch(0.55 0.2 310 / 0.06) 0%, transparent 70%)",
             filter: "blur(40px)",
           }}
         />
@@ -107,7 +118,7 @@ function HomeContent() {
           {/* Sign-in button */}
           <button
             onClick={handleLogin}
-            className="mt-10 inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]"
+            className="mt-10 inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_4px_20px_oklch(0.488_0.183_274.376/0.12)] active:scale-[0.98]"
           >
             <GoogleIcon />
             Continue with Google — it&apos;s free
@@ -124,16 +135,19 @@ function HomeContent() {
             emoji="📐"
             title="Visual Timeline"
             description="Color-coded grid of your plotlines, chapters, and scenes. Drag to rearrange."
+            accentColor="240"
           />
           <FeatureCard
             emoji="📝"
             title="Write in Google Docs"
             description="One click opens a Doc pre-loaded with your scene context and outline notes."
+            accentColor="274"
           />
           <FeatureCard
             emoji="👤"
             title="Story Bible"
             description="Characters, places, and notes — all linked to the scenes where they appear."
+            accentColor="165"
           />
         </div>
       </main>
@@ -167,15 +181,24 @@ function FeatureCard({
   emoji,
   title,
   description,
+  accentColor = "274",
 }: {
   emoji: string;
   title: string;
   description: string;
+  accentColor?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card px-5 py-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <div className="mb-3 text-2xl">{emoji}</div>
-      <h3 className="text-sm font-bold">{title}</h3>
+    <div className="group rounded-xl border border-border bg-card px-5 py-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-border/70">
+      <div
+        className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl text-xl shadow-sm"
+        style={{
+          background: `linear-gradient(135deg, oklch(0.92 0.06 ${accentColor}), oklch(0.88 0.09 ${accentColor}))`,
+        }}
+      >
+        {emoji}
+      </div>
+      <h3 className="text-sm font-bold tracking-tight">{title}</h3>
       <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
     </div>
   );

@@ -13,24 +13,24 @@
 
   /* shadcn/ui tokens — mapped to our refined palette */
   --radius: 0.625rem;
-  --background: oklch(0.985 0.002 285);
-  --foreground: oklch(0.13 0.01 285);
+  --background: oklch(0.977 0.007 285);
+  --foreground: oklch(0.13 0.012 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.01 285);
+  --card-foreground: oklch(0.13 0.012 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.01 285);
+  --popover-foreground: oklch(0.13 0.012 285);
   --primary: oklch(0.488 0.183 274.376);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.96 0.003 285);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.96 0.003 285);
-  --muted-foreground: oklch(0.52 0.01 285);
+  --muted: oklch(0.955 0.005 285);
+  --muted-foreground: oklch(0.50 0.012 285);
   --accent: oklch(0.94 0.005 285);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.9 0.004 285);
-  --input: oklch(0.9 0.004 285);
+  --border: oklch(0.888 0.006 285);
+  --input: oklch(0.888 0.006 285);
   --ring: oklch(0.488 0.183 274.376);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.714);
@@ -107,15 +107,50 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.82 0.005 285);
+  background: oklch(0.80 0.007 285);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.7 0.008 285);
+  background: oklch(0.66 0.01 285);
 }
 
 /* Better text selection */
 ::selection {
-  background: oklch(0.488 0.183 274.376 / 0.18);
+  background: oklch(0.488 0.183 274.376 / 0.20);
   color: oklch(0.13 0.01 285);
+}
+
+/* Premium input focus ring */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+/* Smooth page transitions */
+* {
+  text-rendering: optimizeLegibility;
+}
+
+/* Subtle card shadows throughout */
+.card-glow:hover {
+  box-shadow: 0 4px 20px oklch(0.488 0.183 274.376 / 0.10);
+}
+
+/* Smooth number transitions for counters/progress */
+.tabular-transition {
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium focus ring for interactive elements */
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid oklch(0.488 0.183 274.376 / 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Subtle backdrop for floating panels */
+.panel-backdrop {
+  backdrop-filter: blur(8px) saturate(1.4);
 }

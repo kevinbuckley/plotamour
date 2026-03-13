@@ -51,6 +51,7 @@ export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
     transform: CSS.Translate.toString(transform),
     borderLeftColor: plotlineColor,
     borderLeftWidth: "4px",
+    backgroundColor: `${plotlineColor}0d`,
   };
 
   return (
@@ -58,8 +59,8 @@ export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group/card w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all duration-150 hover:shadow-md",
-        isDragging && "z-50 opacity-50 shadow-xl"
+        "group/card w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:border-border/80",
+        isDragging && "z-50 opacity-50 shadow-xl rotate-1"
       )}
     >
       <div className="flex items-start gap-1 p-2.5">
@@ -94,9 +95,9 @@ export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
           )}
 
           {doc && wordCount > 0 && (
-            <div className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-              <FileText className="h-2.5 w-2.5" />
-              <span>{wordCount.toLocaleString()} words</span>
+            <div className="mt-1.5 flex items-center gap-1.5">
+              <FileText className="h-2.5 w-2.5 text-muted-foreground/60 shrink-0" />
+              <span className="text-[11px] text-muted-foreground">{wordCount.toLocaleString()} words</span>
             </div>
           )}
         </button>

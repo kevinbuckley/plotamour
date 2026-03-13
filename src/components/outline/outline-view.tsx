@@ -14,10 +14,10 @@ interface OutlineViewProps {
   scenes: SceneWithDoc[];
 }
 
-const STATUS_CONFIG: Record<WritingStatus, { icon: string; className: string; label: string; pillClass: string }> = {
-  not_started: { icon: "○", className: "text-gray-400", label: "Not started", pillClass: "bg-gray-100 text-gray-500" },
-  in_progress: { icon: "◐", className: "text-amber-500", label: "Writing", pillClass: "bg-amber-50 text-amber-600" },
-  draft_complete: { icon: "●", className: "text-emerald-500", label: "Complete", pillClass: "bg-emerald-50 text-emerald-700" },
+const STATUS_CONFIG: Record<WritingStatus, { dot: string; ring: string; label: string; pillClass: string }> = {
+  not_started: { dot: "bg-gray-300", ring: "ring-1 ring-gray-300/60", label: "Not started", pillClass: "bg-gray-100 text-gray-500" },
+  in_progress: { dot: "bg-amber-400", ring: "ring-2 ring-amber-400/30", label: "Writing", pillClass: "bg-amber-50 text-amber-600" },
+  draft_complete: { dot: "bg-emerald-500", ring: "ring-2 ring-emerald-500/30", label: "Complete", pillClass: "bg-emerald-50 text-emerald-700" },
 };
 
 export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineViewProps) {
@@ -95,16 +95,16 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
       <div className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid grid-cols-3 divide-x divide-border">
           <div className="px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Scenes</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{scenes.length}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Scenes</p>
+            <p className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">{scenes.length}</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Words</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">{totalWords.toLocaleString()}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Words</p>
+            <p className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">{totalWords.toLocaleString()}</p>
           </div>
           <div className="px-5 py-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Complete</p>
-            <p className="mt-1 text-2xl font-bold text-foreground">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Drafted</p>
+            <p className="mt-1.5 text-2xl font-bold tabular-nums text-foreground">
               {completedScenes}
               <span className="ml-1 text-base font-normal text-muted-foreground">/ {scenes.length}</span>
             </p>
@@ -112,17 +112,31 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
         </div>
         {/* Overall progress bar */}
         {scenes.length > 0 && (
-          <div className="border-t border-border px-5 py-3">
-            <div className="mb-1.5 flex items-center justify-between">
+          <div className="border-t border-border/60 bg-muted/20 px-5 py-3">
+            <div className="mb-2 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                {inProgressScenes > 0 && `${inProgressScenes} in progress · `}
-                {completionPct}% drafted
+                {inProgressScenes > 0 && (
+                  <span className="mr-2 inline-flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    {inProgressScenes} writing
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {completedScenes} complete
+                </span>
               </p>
+              <span className="text-xs font-semibold text-foreground">{completionPct}%</span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
-                style={{ width: `${completionPct}%` }}
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${completionPct}%`,
+                  background: completionPct === 100
+                    ? "oklch(0.7 0.18 150)"
+                    : "oklch(0.488 0.183 274.376)",
+                }}
               />
             </div>
           </div>
@@ -165,7 +179,7 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
                 <div className="ml-auto flex items-center gap-3">
                   {chapterScenes.length > 0 && (
                     <div className="hidden items-center gap-2 sm:flex">
-                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-emerald-500 transition-all"
                           style={{ width: `${chapterPct}%` }}
@@ -197,17 +211,26 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
                         <div
                           key={scene.id}
                           className={cn(
-                            "flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/30",
+                            "relative flex items-start gap-3 px-4 py-3 pl-5 transition-colors hover:bg-muted/30",
                             sceneIdx < chapterScenes.length - 1 && "border-b border-border/40"
                           )}
                         >
-                          {/* Status indicator */}
-                          <span
-                            className={cn("mt-0.5 shrink-0 text-base leading-none", statusInfo.className)}
+                          {/* Plotline color left accent */}
+                          {plotline && (
+                            <div
+                              className="absolute left-0 top-0 h-full w-[3px]"
+                              style={{ backgroundColor: plotline.color }}
+                            />
+                          )}
+                          {/* Status indicator dot */}
+                          <div
+                            className={cn(
+                              "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+                              statusInfo.dot,
+                              statusInfo.ring
+                            )}
                             title={statusInfo.label}
-                          >
-                            {statusInfo.icon}
-                          </span>
+                          />
 
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
@@ -283,9 +306,12 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
                       );
                     })
                   ) : (
-                    <p className="px-4 py-3 text-xs text-muted-foreground">
-                      No scenes in this chapter yet. Add them from the Timeline.
-                    </p>
+                    <div className="flex items-center gap-2 px-4 py-3.5">
+                      <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                      <p className="text-xs italic text-muted-foreground/60">
+                        No scenes yet — add them from the Timeline.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}

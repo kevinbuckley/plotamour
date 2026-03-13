@@ -1,7 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2, User } from "lucide-react";
+import { X, Plus, Trash2 } from "lucide-react";
+
+/** Deterministic color for character avatar from name */
+function getAvatarColor(name: string): { bg: string; text: string } {
+  const COLORS = [
+    { bg: "#dbeafe", text: "#1d4ed8" },
+    { bg: "#ede9fe", text: "#7c3aed" },
+    { bg: "#fce7f3", text: "#be185d" },
+    { bg: "#dcfce7", text: "#15803d" },
+    { bg: "#fef3c7", text: "#b45309" },
+    { bg: "#ffedd5", text: "#c2410c" },
+    { bg: "#e0f2fe", text: "#0369a1" },
+    { bg: "#f3e8ff", text: "#7e22ce" },
+  ];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
+  return COLORS[Math.abs(hash) % COLORS.length];
+}
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -117,22 +134,30 @@ export function CharacterDetail({
     setTagIds((prev) => prev.filter((id) => id !== tagId));
   };
 
+  const avatarColor = getAvatarColor(character.name);
+
   return (
     <div className="w-[380px] shrink-0 border-l border-border bg-background">
       <div className="flex h-full flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-              <User className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-sm"
+              style={{ backgroundColor: avatarColor.bg, color: avatarColor.text }}
+            >
+              {character.name.charAt(0).toUpperCase()}
             </div>
-            <h2 className="truncate text-base font-semibold">{character.name}</h2>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Character</p>
+              <h2 className="truncate text-sm font-semibold leading-tight">{character.name}</h2>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
+            className="ml-2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -140,7 +165,7 @@ export function CharacterDetail({
         <div className="flex-1 space-y-5 overflow-y-auto p-5">
           {/* Name */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Name</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Name</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -150,7 +175,7 @@ export function CharacterDetail({
 
           {/* Description */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Description</label>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Description</label>
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -160,14 +185,17 @@ export function CharacterDetail({
             />
           </div>
 
+          {/* Divider */}
+          <div className="border-t border-border/60" />
+
           {/* Custom Attributes */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Profile</label>
+            <label className="mb-2.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Profile</label>
             <div className="space-y-2">
               {Object.entries(attributes).map(([key, value]) => (
                 <div key={key} className="group flex items-start gap-2">
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground">{key}</label>
+                  <div className="flex-1 overflow-hidden rounded-lg border border-border bg-muted/30 px-3 py-2">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{key}</label>
                     <Input
                       value={value}
                       onChange={(e) =>
@@ -177,12 +205,12 @@ export function CharacterDetail({
                         }))
                       }
                       onBlur={(e) => handleSaveAttribute(key, e.target.value)}
-                      className="mt-0.5"
+                      className="mt-0.5 h-auto border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
                     />
                   </div>
                   <button
                     onClick={() => handleDeleteAttribute(key)}
-                    className="mt-5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                    className="mt-3 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -194,7 +222,7 @@ export function CharacterDetail({
               <Input
                 value={newAttrKey}
                 onChange={(e) => setNewAttrKey(e.target.value)}
-                placeholder="Field name (e.g. Age, Motivation)"
+                placeholder="Add field (e.g. Age, Motivation)"
                 className="text-sm"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleAddAttribute();
@@ -213,7 +241,7 @@ export function CharacterDetail({
 
           {/* Tags */}
           <div>
-            <label className="mb-2 block text-sm font-medium">Tags</label>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Tags</label>
             <TagPicker
               allTags={allTags}
               selectedTagIds={tagIds}
@@ -224,20 +252,22 @@ export function CharacterDetail({
             />
           </div>
 
+          {/* Divider */}
+          <div className="border-t border-border/60" />
+
           {/* Appears In */}
           <div>
-            <label className="mb-2 block text-sm font-medium">
-              Appears In ({sceneIds.length} scene{sceneIds.length !== 1 ? "s" : ""})
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+              Appears In
             </label>
             {sceneIds.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 Link this character to scenes from the scene detail panel.
               </p>
             ) : (
-              <p className="text-xs text-muted-foreground">
-                {sceneIds.length} scene{sceneIds.length !== 1 ? "s" : ""} linked.
-                View them in the timeline.
-              </p>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/8 px-2.5 py-1 text-xs font-semibold text-primary">
+                <span>{sceneIds.length} scene{sceneIds.length !== 1 ? "s" : ""}</span>
+              </div>
             )}
           </div>
         </div>
