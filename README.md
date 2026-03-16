@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <a href="https://plotamour.vercel.app">Live App</a> · <a href="#features">Features</a> · <a href="#getting-started">Getting Started</a> · <a href="#tech-stack">Tech Stack</a>
+  <a href="https://www.plotamour.com">Live App</a> · <a href="#features">Features</a> · <a href="#getting-started">Getting Started</a> · <a href="#tech-stack">Tech Stack</a>
 </p>
 
 ---

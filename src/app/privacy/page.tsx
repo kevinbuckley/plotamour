@@ -30,7 +30,7 @@ export default function PrivacyPage() {
             plotamour (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is a
             visual story planning application for novelists. This Privacy Policy
             explains how we collect, use, and protect your personal information
-            when you use our service at plotamour.vercel.app.
+            when you use our service at www.plotamour.com.
           </p>
         </section>
 
