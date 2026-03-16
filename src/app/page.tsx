@@ -1,7 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { createClient } from "@/lib/db/browser";
 import Link from "next/link";
 
@@ -28,7 +28,26 @@ const GoogleIcon = () => (
 
 function HomeContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const next = searchParams.get("next") ?? "/projects";
+  const code = searchParams.get("code");
+  const [exchangingCode, setExchangingCode] = useState(!!code);
+
+  // Handle auth code that Supabase redirects to the Site URL (PKCE flow)
+  useEffect(() => {
+    if (!code) return;
+    const supabase = createClient();
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (!error) {
+        router.replace(next);
+      } else {
+        console.error("Code exchange failed:", error.message);
+        setExchangingCode(false);
+        // Clear the code from URL
+        router.replace("/");
+      }
+    });
+  }, [code, next, router]);
 
   const handleLogin = async () => {
     const supabase = createClient();
@@ -40,6 +59,17 @@ function HomeContent() {
       },
     });
   };
+
+  if (exchangingCode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mb-3 text-2xl animate-pulse">✨</div>
+          <p className="text-sm text-muted-foreground">Signing you in…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
