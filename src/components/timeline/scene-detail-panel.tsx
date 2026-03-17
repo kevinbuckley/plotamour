@@ -61,6 +61,7 @@ export function SceneDetailPanel({
   const [conflict, setConflict] = useState(scene.conflict);
   const [creatingDoc, setCreatingDoc] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
+  const [localDoc, setLocalDoc] = useState<SceneGoogleDoc | null>(scene.google_doc ?? null);
   const [linkedCharacterIds, setLinkedCharacterIds] = useState<string[]>([]);
   const [linkedPlaceIds, setLinkedPlaceIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
@@ -69,12 +70,13 @@ export function SceneDetailPanel({
 
   const currentChapter = chapters.find((c) => c.id === scene.chapter_id);
   const currentPlotline = plotlines.find((p) => p.id === scene.plotline_id);
-  const doc = scene.google_doc;
+  const doc = localDoc;
 
   useEffect(() => {
     setTitle(scene.title);
     setSummary(scene.summary);
     setConflict(scene.conflict);
+    setLocalDoc(scene.google_doc ?? null);
 
     const controller = new AbortController();
 
@@ -134,6 +136,7 @@ export function SceneDetailPanel({
       if (res.ok) {
         const data = await res.json();
         if (data.url) {
+          setLocalDoc(data.doc);
           window.open(data.url, "_blank");
         } else {
           setDocError("Failed to create document.");

@@ -20,7 +20,8 @@ const STATUS_CONFIG: Record<WritingStatus, { dot: string; ring: string; label: s
   draft_complete: { dot: "bg-emerald-500", ring: "ring-2 ring-emerald-500/30", label: "Complete", pillClass: "bg-emerald-50 text-emerald-700" },
 };
 
-export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineViewProps) {
+export function OutlineView({ projectId, chapters, plotlines, scenes: initialScenes }: OutlineViewProps) {
+  const [scenes, setScenes] = useState<SceneWithDoc[]>(initialScenes);
   const [collapsedChapters, setCollapsedChapters] = useState<Set<string>>(new Set());
   const [creatingDocForScene, setCreatingDocForScene] = useState<string | null>(null);
   const [docErrors, setDocErrors] = useState<Record<string, string>>({});
@@ -64,9 +65,10 @@ export function OutlineView({ projectId, chapters, plotlines, scenes }: OutlineV
       if (res.ok) {
         const data = await res.json();
         if (data.url) {
+          setScenes((prev) =>
+            prev.map((s) => (s.id === sceneId ? { ...s, google_doc: data.doc } : s))
+          );
           window.open(data.url, "_blank");
-          // Reload to update doc status
-          window.location.reload();
         } else {
           setDocErrors((prev) => ({ ...prev, [sceneId]: "Failed to create doc." }));
         }
