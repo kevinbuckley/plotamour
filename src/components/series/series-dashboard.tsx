@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, BookOpen, Trash2, Pencil } from "lucide-react";
+import { Plus, BookOpen, Trash2 } from "lucide-react";
 import type { Book, Project } from "@/lib/types/database";
 
 interface SeriesDashboardProps {
@@ -18,16 +18,6 @@ export function SeriesDashboard({ project, books: initialBooks }: SeriesDashboar
   const [showNewForm, setShowNewForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [creating, setCreating] = useState(false);
-  const [editingBookId, setEditingBookId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState("");
-  const editInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (editingBookId) {
-      editInputRef.current?.focus();
-      editInputRef.current?.select();
-    }
-  }, [editingBookId]);
 
   const handleCreateBook = async () => {
     if (!newTitle.trim()) return;
@@ -70,36 +60,6 @@ export function SeriesDashboard({ project, books: initialBooks }: SeriesDashboar
       setBooks((prev) => prev.filter((b) => b.id !== bookId));
     } catch (e) {
       console.error("Failed to delete book:", e);
-    }
-  };
-
-  const handleRenameBook = async (bookId: string) => {
-    const trimmed = editingTitle.trim();
-    const book = books.find((b) => b.id === bookId);
-    if (!trimmed || trimmed === book?.title) {
-      setEditingBookId(null);
-      return;
-    }
-
-    // Optimistic update
-    setBooks((prev) =>
-      prev.map((b) => (b.id === bookId ? { ...b, title: trimmed } : b))
-    );
-    setEditingBookId(null);
-
-    try {
-      const res = await fetch("/api/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update", id: bookId, title: trimmed }),
-      });
-      if (!res.ok) throw new Error("Failed to rename book");
-    } catch (e) {
-      console.error("Failed to rename book:", e);
-      // Revert on failure
-      setBooks((prev) =>
-        prev.map((b) => (b.id === bookId ? { ...b, title: book?.title ?? trimmed } : b))
-      );
     }
   };
 
@@ -158,36 +118,9 @@ export function SeriesDashboard({ project, books: initialBooks }: SeriesDashboar
                     >
                       Book {index + 1}
                     </span>
-                    {editingBookId === book.id ? (
-                      <input
-                        ref={editInputRef}
-                        value={editingTitle}
-                        onChange={(e) => setEditingTitle(e.target.value)}
-                        onBlur={() => handleRenameBook(book.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleRenameBook(book.id);
-                          }
-                          if (e.key === "Escape") setEditingBookId(null);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-1.5 w-full border-b border-primary bg-transparent text-sm font-semibold leading-snug outline-none"
-                      />
-                    ) : (
-                      <h3
-                        className="mt-1.5 flex cursor-text items-center gap-1 truncate text-sm font-semibold leading-snug transition-colors group-hover:text-primary"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingBookId(book.id);
-                          setEditingTitle(book.title);
-                        }}
-                        title="Click to rename"
-                      >
-                        {book.title}
-                        <Pencil className="inline h-2.5 w-2.5 shrink-0 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/50" />
-                      </h3>
-                    )}
+                    <h3 className="mt-1.5 truncate text-sm font-semibold leading-snug transition-colors group-hover:text-primary">
+                      {book.title}
+                    </h3>
                   </div>
                   <button
                     onClick={(e) => {

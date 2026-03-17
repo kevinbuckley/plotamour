@@ -3,9 +3,11 @@ import { getTimelineData } from "@/lib/services/timeline";
 import { getCharacters } from "@/lib/services/characters";
 import { getPlaces } from "@/lib/services/places";
 import { getTags } from "@/lib/services/tags";
+import { getBook } from "@/lib/services/books";
 import { TimelineGrid } from "@/components/timeline/timeline-grid";
 import { ExportMenu } from "@/components/shared/export-menu";
 import { EditableProjectTitle } from "@/components/shared/editable-project-title";
+import { EditableBookTitle } from "@/components/shared/editable-book-title";
 import { redirect } from "next/navigation";
 
 export default async function TimelinePage({
@@ -24,12 +26,15 @@ export default async function TimelinePage({
   const bookId = bookIdParam ?? (await getFirstBookId(projectId));
   if (!bookId) redirect("/projects");
 
-  const [timeline, characters, places, tags] = await Promise.all([
+  const [timeline, characters, places, tags, book] = await Promise.all([
     getTimelineData(bookId),
     getCharacters(projectId),
     getPlaces(projectId),
     getTags(projectId),
+    getBook(bookId),
   ]);
+
+  const isSeries = project.project_type === "series";
 
   return (
     <div className="flex h-full flex-col">
@@ -37,6 +42,9 @@ export default async function TimelinePage({
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Timeline</p>
           <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
+          {isSeries && book && (
+            <EditableBookTitle bookId={bookId} initialTitle={book.title} />
+          )}
         </div>
         <ExportMenu bookId={bookId} />
       </div>
