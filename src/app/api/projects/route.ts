@@ -1,4 +1,4 @@
-import { createProject, updateProject } from "@/lib/services/projects";
+import { createProject, updateProject, deleteProject } from "@/lib/services/projects";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -20,6 +20,23 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Failed to create project:", error);
     return NextResponse.json({ error: "Failed to create project" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
+    }
+
+    await deleteProject(id);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete project:", error);
+    return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }
 

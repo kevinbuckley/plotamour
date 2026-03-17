@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookSelector } from "@/components/series/book-selector";
 import { SidebarLink } from "@/components/shared/sidebar-link";
+import { DeleteProjectButton } from "@/components/shared/delete-project-button";
 import { createClient } from "@/lib/db/server";
 import type { Book, ProjectType } from "@/lib/types/database";
 
@@ -171,6 +172,13 @@ export async function AppSidebar({
           </>
         )}
       </nav>
+
+      {/* Delete project — only on drill-down */}
+      {projectId && (
+        <div className="px-2 pb-1">
+          <DeleteProjectButton projectId={projectId} />
+        </div>
+      )}
 
       {/* User section */}
       <div className="border-t border-sidebar-border bg-sidebar-accent/30 p-3">
