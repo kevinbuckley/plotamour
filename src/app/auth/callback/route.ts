@@ -10,15 +10,16 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      // Store the Google refresh token for later Google Docs API access
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.provider_refresh_token) {
+      // Store the Google refresh token for later Google Docs API access.
+      // Must use the session returned directly from exchangeCodeForSession —
+      // provider_refresh_token is not available via a subsequent getSession() call.
+      if (data.session?.provider_refresh_token) {
         await supabase
           .from("profiles")
-          .update({ google_refresh_token: session.provider_refresh_token })
-          .eq("id", session.user.id);
+          .update({ google_refresh_token: data.session.provider_refresh_token })
+          .eq("id", data.session.user.id);
       }
       return NextResponse.redirect(`${origin}${next}`);
     }
