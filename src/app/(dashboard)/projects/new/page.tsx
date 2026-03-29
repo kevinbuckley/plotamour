@@ -64,7 +64,7 @@ export default function NewProjectPage() {
 
   if (step === "template") {
     return (
-      <div className="mx-auto max-w-4xl p-8">
+      <div className="mx-auto max-w-4xl p-4 sm:p-8">
         {loading ? (
           <div className="flex flex-col items-center gap-3 py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -83,7 +83,7 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg p-8">
+    <div className="mx-auto max-w-lg p-4 sm:p-8">
       {/* Page header with icon */}
       <div className="mb-8 flex items-center gap-4">
         <div className="relative">

@@ -29,9 +29,9 @@ export default async function ProjectsPage() {
   const firstName = user?.user?.user_metadata?.full_name?.split(" ")[0];
 
   return (
-    <div className="min-h-full p-8">
+    <div className="min-h-full p-4 sm:p-8">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
             {firstName ? `Hey, ${firstName} 👋` : "Your Projects"}

@@ -45,7 +45,7 @@ export async function AppSidebar({
   const avatarStyle = getAvatarStyle(email || displayName);
 
   return (
-    <aside className="flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="hidden md:flex h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Logo */}
       <div className="flex items-center border-b border-sidebar-border/60 px-4 py-4">
         <Link

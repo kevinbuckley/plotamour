@@ -267,7 +267,7 @@ export function SceneDetailPanel({
       <div className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]" onClick={onClose} />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 z-50 flex h-full w-[420px] flex-col border-l border-border bg-background shadow-2xl">
+      <div className="fixed right-0 top-0 z-50 flex h-full w-full md:w-[420px] flex-col border-l border-border bg-background shadow-2xl">
         {/* Plotline color accent strip */}
         {currentPlotline && (
           <div

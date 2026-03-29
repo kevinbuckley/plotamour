@@ -22,15 +22,15 @@ export default async function SeriesPage({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
-        <div>
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 sm:px-6 py-3.5">
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
             Series Overview
           </p>
           <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>
       </div>
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4 sm:p-6">
         <SeriesDashboard project={project} books={books} />
       </div>
     </div>

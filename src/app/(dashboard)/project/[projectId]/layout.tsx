@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/shared/app-sidebar";
+import { MobileNav } from "@/components/shared/mobile-nav";
 import { getProject } from "@/lib/services/projects";
 import { getBooks } from "@/lib/services/books";
 import { redirect } from "next/navigation";
@@ -24,7 +25,14 @@ export default async function ProjectLayout({
         projectType={project.project_type}
         books={books}
       />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <div className="flex flex-1 flex-col min-h-0">
+        <MobileNav
+          projectId={projectId}
+          projectType={project.project_type}
+          books={books}
+        />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }

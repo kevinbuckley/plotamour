@@ -270,7 +270,118 @@ export function TimelineGrid({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="relative">
+      {/* ── Mobile view: chapter accordion ── */}
+      <div className="md:hidden flex flex-col gap-4 p-4">
+        {/* Plotline legend + add */}
+        <div className="flex flex-wrap items-center gap-2">
+          {plotlines.map((plotline) => (
+            <span
+              key={plotline.id}
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+              style={{ backgroundColor: plotline.color }}
+            >
+              {plotline.title}
+            </span>
+          ))}
+          <button
+            onClick={handleAddPlotline}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-border/60 px-2.5 py-1 text-xs text-muted-foreground/60 hover:border-primary/60 hover:text-primary"
+          >
+            <Plus className="h-3 w-3" />
+            Plotline
+          </button>
+        </div>
+
+        {/* Chapter sections */}
+        {chapters.map((chapter, idx) => (
+          <div key={chapter.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            {/* Chapter header */}
+            <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-3 py-2.5">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[11px] font-bold text-primary">
+                {idx + 1}
+              </span>
+              {editingChapter === chapter.id ? (
+                <input
+                  className="flex-1 rounded border border-input bg-background px-2 py-0.5 text-sm"
+                  defaultValue={chapter.title}
+                  autoFocus
+                  onBlur={(e) => handleRenameChapter(chapter.id, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleRenameChapter(chapter.id, e.currentTarget.value);
+                    if (e.key === "Escape") setEditingChapter(null);
+                  }}
+                />
+              ) : (
+                <span
+                  className="flex-1 text-sm font-semibold"
+                  onClick={() => setEditingChapter(chapter.id)}
+                >
+                  {chapter.title}
+                </span>
+              )}
+              <button
+                onClick={() => handleDeleteChapter(chapter.id)}
+                className="shrink-0 rounded p-1 text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scenes per plotline */}
+            <div className="divide-y divide-border/40">
+              {plotlines.map((plotline) => {
+                const cellScenes = getScenesForCell(chapter.id, plotline.id);
+                return (
+                  <div key={plotline.id} className="p-3">
+                    <div className="mb-2 flex items-center gap-1.5">
+                      <div className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: plotline.color }} />
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                        {plotline.title}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {cellScenes.map((scene) => (
+                        <button
+                          key={scene.id}
+                          onClick={() => setSelectedScene(scene)}
+                          className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                          style={{ borderLeftColor: plotline.color, borderLeftWidth: "3px" }}
+                        >
+                          <span className="block text-sm font-medium leading-snug">{scene.title}</span>
+                          {scene.summary && (
+                            <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{scene.summary}</p>
+                          )}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => handleAddScene(chapter.id, plotline.id)}
+                        className="flex w-full items-center gap-1.5 rounded-md border border-dashed border-border/40 px-3 py-1.5 text-xs text-muted-foreground/50 hover:border-primary/50 hover:text-primary"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add scene
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* Add chapter */}
+        <button
+          onClick={handleAddChapter}
+          className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border/60 py-3 text-sm text-muted-foreground/60 hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
+        >
+          <Plus className="h-4 w-4" />
+          Add chapter
+        </button>
+      </div>
+
+      {/* ── Desktop view: grid ── */}
+      <div className="relative hidden md:block">
         {/* Grid */}
         <div className="min-w-max p-4">
           <div
@@ -516,24 +627,25 @@ export function TimelineGrid({
           )}
         </DragOverlay>
 
-        {/* Scene detail panel */}
-        {selectedScene && (
-          <SceneDetailPanel
-            scene={selectedScene}
-            chapters={chapters}
-            plotlines={plotlines}
-            projectId={projectId}
-            characters={characters}
-            places={places}
-            tags={tags}
-            onUpdate={handleUpdateScene}
-            onDelete={handleDeleteScene}
-            onMove={handleMoveScene}
-            onClose={() => setSelectedScene(null)}
-            onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
-          />
-        )}
       </div>
+
+      {/* Scene detail panel — shared for both mobile and desktop */}
+      {selectedScene && (
+        <SceneDetailPanel
+          scene={selectedScene}
+          chapters={chapters}
+          plotlines={plotlines}
+          projectId={projectId}
+          characters={characters}
+          places={places}
+          tags={tags}
+          onUpdate={handleUpdateScene}
+          onDelete={handleDeleteScene}
+          onMove={handleMoveScene}
+          onClose={() => setSelectedScene(null)}
+          onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
+        />
+      )}
     </DndContext>
   );
 }

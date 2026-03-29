@@ -92,7 +92,7 @@ export function OutlineView({ projectId, chapters, plotlines, scenes: initialSce
   const completionPct = scenes.length > 0 ? Math.round((completedScenes / scenes.length) * 100) : 0;
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="mx-auto max-w-3xl p-4 sm:p-6">
       {/* Summary bar */}
       <div className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="grid grid-cols-3 divide-x divide-border">

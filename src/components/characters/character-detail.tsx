@@ -165,7 +165,7 @@ export function CharacterDetail({
   const avatarColor = getAvatarColor(character.name);
 
   return (
-    <div className="w-[380px] shrink-0 border-l border-border bg-background">
+    <div className="w-full md:w-[380px] shrink-0 border-l border-border bg-background">
       <div className="flex h-full flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5">

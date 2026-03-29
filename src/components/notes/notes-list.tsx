@@ -80,9 +80,9 @@ export function NotesList({ projectId, initialNotes }: NotesListProps) {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col md:flex-row">
       {/* Sidebar: note list */}
-      <div className="w-72 shrink-0 border-r border-border">
+      <div className={`w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-border${selectedNote ? " hidden md:block" : ""}`}>
         <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
             {filteredNotes.length} Note{filteredNotes.length !== 1 ? "s" : ""}
@@ -190,14 +190,25 @@ export function NotesList({ projectId, initialNotes }: NotesListProps) {
       </div>
 
       {/* Editor */}
-      <div className="flex-1 overflow-y-auto">
+      <div className={`flex-1 overflow-y-auto${!selectedNote ? " hidden md:block" : ""}`}>
         {selectedNote ? (
-          <NoteEditor
-            key={selectedNote.id}
-            note={selectedNote}
-            onUpdate={handleUpdate}
-            onDelete={handleDelete}
-          />
+          <>
+            <button
+              onClick={() => setSelectedId(null)}
+              className="flex md:hidden items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground w-full"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+              All notes
+            </button>
+            <NoteEditor
+              key={selectedNote.id}
+              note={selectedNote}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
+            />
+          </>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60">

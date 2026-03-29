@@ -122,7 +122,7 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <div className="mb-8">
         <Link
           href="/projects"
@@ -142,7 +142,7 @@ export default function ImportPage() {
           <>
             {/* Upload area */}
             <div
-              className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-14 text-center transition-all duration-200 ${
+              className={`relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 sm:p-14 text-center transition-all duration-200 ${
                 dragActive
                   ? "border-primary bg-primary/5 shadow-[0_0_0_4px_oklch(0.488_0.183_274.376/0.08)]"
                   : "border-border hover:border-primary/40 hover:bg-muted/20"

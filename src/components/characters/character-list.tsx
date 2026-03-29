@@ -86,9 +86,9 @@ export function CharacterList({
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full flex-col md:flex-row">
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className={`flex-1 overflow-y-auto p-4 md:p-6${selectedCharacter ? " hidden md:block" : ""}`}>
         <div className="mb-5 flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/60">
             {characters.length} Character{characters.length !== 1 ? "s" : ""}
@@ -114,7 +114,7 @@ export function CharacterList({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {characters.map((character) => {
               const avatarColor = getAvatarColor(character.name);
               return (

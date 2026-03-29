@@ -21,8 +21,8 @@ export default async function CharactersPage({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-border px-6 py-3.5">
-        <div>
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 sm:px-6 py-3.5">
+        <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Characters</p>
           <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
         </div>

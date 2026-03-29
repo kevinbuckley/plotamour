@@ -55,8 +55,7 @@ function HomeContent() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        scopes:
-          "https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file",
+        scopes: "https://www.googleapis.com/auth/drive.file",
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -79,7 +78,7 @@ function HomeContent() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-5">
+      <header className="flex items-center justify-between px-4 sm:px-8 py-5">
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary shadow-sm">
             <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -188,7 +187,7 @@ function HomeContent() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/60 px-8 py-5 text-center text-xs text-muted-foreground">
+      <footer className="border-t border-border/60 px-4 sm:px-8 py-5 text-center text-xs text-muted-foreground">
         <div className="flex items-center justify-center gap-4">
           <a
             href="https://github.com/kevinbuckley/plotamour"
