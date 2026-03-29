@@ -287,9 +287,6 @@ export function OutlineView({ projectId, chapters, plotlines, scenes: initialSce
                                     )}
                                     <span>{isCreating ? "Creating..." : "Write in Google Docs"}</span>
                                   </button>
-                                  <p className="ml-2 mt-0.5 text-[10px] leading-tight text-muted-foreground/50">
-                                    You may see a &ldquo;Google hasn&rsquo;t verified this app&rdquo; warning — click Advanced &rarr; Go to plotamour. This will be resolved by the end of March.
-                                  </p>
                                 </div>
                               )}
                               {error && (
