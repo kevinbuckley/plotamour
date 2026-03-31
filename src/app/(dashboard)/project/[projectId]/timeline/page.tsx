@@ -8,6 +8,7 @@ import { TimelineGrid } from "@/components/timeline/timeline-grid";
 import { ExportMenu } from "@/components/shared/export-menu";
 import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 import { EditableBookTitle } from "@/components/shared/editable-book-title";
+import { ResumeBanner } from "@/components/shared/resume-banner";
 import { redirect } from "next/navigation";
 
 export default async function TimelinePage({
@@ -50,6 +51,7 @@ export default async function TimelinePage({
           )}
         </div>
       </div>
+      <ResumeBanner projectId={projectId} bookId={bookId} />
       <div className="flex-1 overflow-auto">
         <TimelineGrid
           bookId={bookId}

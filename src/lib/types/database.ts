@@ -131,3 +131,14 @@ export interface Tag {
   created_at: string;
   updated_at: string;
 }
+
+export interface StoryPromise {
+  id: string;
+  book_id: string;
+  description: string;
+  plant_scene_id: string;
+  payoff_scene_id: string | null;
+  resolved: boolean;
+  created_at: string;
+  updated_at: string;
+}

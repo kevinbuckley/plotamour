@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 import { PLOTLINE_COLORS } from "@/lib/config/constants";
 import type {
@@ -11,11 +11,13 @@ import type {
   Character,
   Place,
   Tag,
+  StoryPromise,
 } from "@/lib/types/database";
 import { SceneCard } from "./scene-card";
 import { SceneDetailPanel } from "./scene-detail-panel";
 import { DroppableCell } from "./droppable-cell";
 import { Plus } from "lucide-react";
+import { useRecentScenes } from "@/lib/hooks/use-recent-scenes";
 import {
   DndContext,
   DragOverlay,
@@ -69,6 +71,52 @@ export function TimelineGrid({
   const [editingChapter, setEditingChapter] = useState<string | null>(null);
   const [editingPlotline, setEditingPlotline] = useState<string | null>(null);
   const [activeScene, setActiveScene] = useState<SceneWithDoc | null>(null);
+  const [promises, setPromises] = useState<StoryPromise[]>([]);
+  const { trackScene } = useRecentScenes(projectId);
+
+  // Fetch story promises for the book
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/story-promises", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getForBook", bookId }),
+      signal: controller.signal,
+    })
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch promises"); return r.json(); })
+      .then(setPromises)
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load promises:", e); });
+    return () => controller.abort();
+  }, [bookId]);
+
+  // Build a set of scene IDs that have promises
+  const sceneIdsWithPromises = useMemo(() => {
+    const ids = new Set<string>();
+    for (const p of promises) {
+      ids.add(p.plant_scene_id);
+      if (p.payoff_scene_id) ids.add(p.payoff_scene_id);
+    }
+    return ids;
+  }, [promises]);
+
+  const handleSelectScene = useCallback(
+    (scene: SceneWithDoc) => {
+      setSelectedScene(scene);
+      const chapter = chapters.find((c) => c.id === scene.chapter_id);
+      const plotline = plotlines.find((p) => p.id === scene.plotline_id);
+      trackScene({
+        sceneId: scene.id,
+        sceneTitle: scene.title,
+        chapterTitle: chapter?.title ?? "Unknown Chapter",
+        plotlineTitle: plotline?.title ?? "Unknown Plotline",
+        plotlineColor: plotline?.color ?? "#6366f1",
+        projectId,
+        bookId,
+        wordCount: scene.google_doc?.word_count ?? 0,
+      });
+    },
+    [chapters, plotlines, projectId, bookId, trackScene]
+  );
 
   // Require 8px of movement before starting a drag (so clicks still work)
   const sensors = useSensors(
@@ -345,7 +393,7 @@ export function TimelineGrid({
                       {cellScenes.map((scene) => (
                         <button
                           key={scene.id}
-                          onClick={() => setSelectedScene(scene)}
+                          onClick={() => handleSelectScene(scene)}
                           className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
                           style={{ borderLeftColor: plotline.color, borderLeftWidth: "3px" }}
                         >
@@ -570,7 +618,8 @@ export function TimelineGrid({
                           key={scene.id}
                           scene={scene}
                           plotlineColor={plotline.color}
-                          onClick={() => setSelectedScene(scene)}
+                          hasPromises={sceneIdsWithPromises.has(scene.id)}
+                          onClick={() => handleSelectScene(scene)}
                         />
                       ))}
                       <button

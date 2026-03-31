@@ -11,6 +11,7 @@ type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
 interface SceneCardProps {
   scene: SceneWithDoc;
   plotlineColor: string;
+  hasPromises?: boolean;
   onClick: () => void;
 }
 
@@ -32,7 +33,7 @@ const STATUS_CONFIG: Record<WritingStatus, { label: string; dot: string; pill: s
   },
 };
 
-export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
+export function SceneCard({ scene, plotlineColor, hasPromises, onClick }: SceneCardProps) {
   const doc = scene.google_doc;
   const wordCount = doc?.word_count ?? 0;
   const status = doc?.writing_status ?? "not_started";
@@ -78,6 +79,7 @@ export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
           <div className="flex items-start justify-between gap-1.5">
             <span className="line-clamp-2 text-sm font-medium leading-snug">
               {scene.title}
+              {hasPromises && <span className="ml-1" title="Has story threads">{"\ud83c\udf31"}</span>}
             </span>
             <div
               className={cn(
@@ -100,6 +102,7 @@ export function SceneCard({ scene, plotlineColor, onClick }: SceneCardProps) {
               <span className="text-[11px] text-muted-foreground">{wordCount.toLocaleString()} words</span>
             </div>
           )}
+
         </button>
       </div>
     </div>

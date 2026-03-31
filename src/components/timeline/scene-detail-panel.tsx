@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2 } from "lucide-react";
+import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles } from "lucide-react";
 import { TagPicker } from "@/components/shared/tag-picker";
-import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag } from "@/lib/types/database";
+import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag, StoryPromise } from "@/lib/types/database";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
 
@@ -67,6 +68,9 @@ export function SceneDetailPanel({
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [showPlacePicker, setShowPlacePicker] = useState(false);
+  const [promises, setPromises] = useState<{id: string; description: string; resolved: boolean; isPlant: boolean; payoff_scene_id: string | null}[]>([]);
+  const [showPromiseInput, setShowPromiseInput] = useState(false);
+  const [newPromiseText, setNewPromiseText] = useState("");
 
   const currentChapter = chapters.find((c) => c.id === scene.chapter_id);
   const currentPlotline = plotlines.find((p) => p.id === scene.plotline_id);
@@ -112,6 +116,25 @@ export function SceneDetailPanel({
       .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
       .then(setTagIds)
       .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load scene tags:", e); });
+
+    // Fetch story promises
+    fetch("/api/story-promises", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getForScene", sceneId: scene.id }),
+      signal: controller.signal,
+    })
+      .then((r) => { if (!r.ok) throw new Error("Failed to fetch promises"); return r.json(); })
+      .then((data: StoryPromise[]) => {
+        setPromises(data.map((p) => ({
+          id: p.id,
+          description: p.description,
+          resolved: p.resolved,
+          isPlant: p.plant_scene_id === scene.id,
+          payoff_scene_id: p.payoff_scene_id,
+        })));
+      })
+      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load story promises:", e); });
 
     return () => controller.abort();
   }, [scene.id]);
@@ -239,6 +262,53 @@ export function SceneDetailPanel({
       setTagIds((prev) => prev.filter((id) => id !== tagId));
     } catch (e) {
       console.error("Failed to remove tag:", e);
+    }
+  };
+
+  const handleCreatePromise = async () => {
+    const text = newPromiseText.trim();
+    if (!text) return;
+    try {
+      const res = await fetch("/api/story-promises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "create", bookId: scene.book_id, description: text, plantSceneId: scene.id }),
+      });
+      if (!res.ok) throw new Error("Failed to create promise");
+      const created: StoryPromise = await res.json();
+      setPromises((prev) => [...prev, { id: created.id, description: created.description, resolved: created.resolved, isPlant: true, payoff_scene_id: null }]);
+      setNewPromiseText("");
+      setShowPromiseInput(false);
+    } catch (e) {
+      console.error("Failed to create promise:", e);
+    }
+  };
+
+  const handleTogglePromise = async (promiseId: string, resolved: boolean) => {
+    try {
+      const res = await fetch("/api/story-promises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", id: promiseId, data: { resolved } }),
+      });
+      if (!res.ok) throw new Error("Failed to update promise");
+      setPromises((prev) => prev.map((p) => p.id === promiseId ? { ...p, resolved } : p));
+    } catch (e) {
+      console.error("Failed to toggle promise:", e);
+    }
+  };
+
+  const handleDeletePromise = async (promiseId: string) => {
+    try {
+      const res = await fetch("/api/story-promises", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id: promiseId }),
+      });
+      if (!res.ok) throw new Error("Failed to delete promise");
+      setPromises((prev) => prev.filter((p) => p.id !== promiseId));
+    } catch (e) {
+      console.error("Failed to delete promise:", e);
     }
   };
 
@@ -521,6 +591,77 @@ export function SceneDetailPanel({
               onRemove={handleRemoveTag}
               onCreate={onTagCreated}
             />
+          </div>
+
+          {/* Story Threads */}
+          <div>
+            <label className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+              <Sparkles className="h-3 w-3" />
+              Story Threads
+            </label>
+            <div className="space-y-1.5">
+              {promises.map((p) => (
+                <div
+                  key={p.id}
+                  className="group flex items-center gap-2.5 rounded-lg bg-muted/40 px-3 py-1.5"
+                >
+                  <span className="shrink-0 text-sm" title={p.isPlant ? "Planted here" : "Payoff here"}>
+                    {p.isPlant ? "\ud83c\udf31" : "\ud83c\udfaf"}
+                  </span>
+                  <span className={cn("flex-1 text-sm", p.resolved && "line-through text-muted-foreground")}>
+                    {p.description}
+                  </span>
+                  <button
+                    onClick={() => handleTogglePromise(p.id, !p.resolved)}
+                    className={cn(
+                      "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors",
+                      p.resolved
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : "border-muted-foreground/30 hover:border-emerald-500"
+                    )}
+                    title={p.resolved ? "Mark unresolved" : "Mark resolved"}
+                  >
+                    {p.resolved && (
+                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDeletePromise(p.id)}
+                    className="ml-auto text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+              {showPromiseInput ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newPromiseText}
+                    onChange={(e) => setNewPromiseText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreatePromise();
+                      if (e.key === "Escape") { setShowPromiseInput(false); setNewPromiseText(""); }
+                    }}
+                    placeholder="Describe the seed / setup..."
+                    autoFocus
+                    className="flex-1 text-sm"
+                  />
+                  <Button onClick={handleCreatePromise} size="sm" variant="outline" className="shrink-0">
+                    Add
+                  </Button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowPromiseInput(true)}
+                  className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add promise
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Google Docs section */}
