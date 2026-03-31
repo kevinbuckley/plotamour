@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshot-landing.png" alt="plotamour — Plan your novel. Write in Google Docs. Love every word." width="700" />
+  <img src="docs/screenshot-landing.png" alt="plotamour timeline view — visual grid of chapters, plotlines, and scenes" width="700" />
 </p>
 
 <h1 align="center">plotamour</h1>
