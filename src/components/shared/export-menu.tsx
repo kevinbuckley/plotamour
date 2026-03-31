@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, ChevronDown, FileText, Code2, Braces, Loader2, BookOpen } from "lucide-react";
+import { Download, ChevronDown, FileText, Code2, Braces, Loader2, BookOpen, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface ExportMenuProps {
@@ -10,6 +10,13 @@ interface ExportMenuProps {
 }
 
 const OUTLINE_OPTIONS = [
+  {
+    format: "pdf" as const,
+    label: "PDF",
+    ext: ".pdf",
+    icon: FileDown,
+    description: "Print-ready document",
+  },
   {
     format: "text" as const,
     label: "Plain Text",
@@ -35,6 +42,13 @@ const OUTLINE_OPTIONS = [
 
 const MANUSCRIPT_OPTIONS = [
   {
+    format: "pdf" as const,
+    label: "PDF",
+    ext: ".pdf",
+    icon: FileDown,
+    description: "Print-ready manuscript",
+  },
+  {
     format: "html" as const,
     label: "HTML",
     ext: ".html",
@@ -50,31 +64,62 @@ const MANUSCRIPT_OPTIONS = [
   },
 ];
 
+/**
+ * Open HTML content in a new window and trigger the browser print dialog.
+ * The user can then save as PDF from the print dialog.
+ */
+function printHtmlAsPdf(html: string) {
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) return;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  // Wait for content to render, then trigger print
+  printWindow.onload = () => {
+    setTimeout(() => {
+      printWindow.print();
+    }, 300);
+  };
+  // Fallback if onload already fired
+  setTimeout(() => {
+    printWindow.print();
+  }, 600);
+}
+
 export function ExportMenu({ bookId }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [compiling, setCompiling] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
 
-  const handleExport = async (format: "text" | "html" | "json") => {
+  const handleExport = async (format: "text" | "html" | "json" | "pdf") => {
     setExporting(true);
     setOpen(false);
 
     try {
+      // PDF uses the HTML export and opens print dialog
+      const apiFormat = format === "pdf" ? "html" : format;
+
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, format }),
+        body: JSON.stringify({ bookId, format: apiFormat }),
       });
 
       if (!res.ok) throw new Error("Export failed");
+
+      if (format === "pdf") {
+        const html = await res.text();
+        printHtmlAsPdf(html);
+        return;
+      }
 
       const blob = await res.blob();
       const disposition = res.headers.get("Content-Disposition");
       const match = disposition?.match(/filename="(.+?)"/);
       const filename = match?.[1] ?? `outline.${format === "json" ? "json" : format}`;
 
-      // Download
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -88,16 +133,19 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
     }
   };
 
-  const handleCompile = async (format: "text" | "html") => {
+  const handleCompile = async (format: "text" | "html" | "pdf") => {
     setCompiling(true);
     setCompileError(null);
     setOpen(false);
 
     try {
+      // PDF uses the HTML compile and opens print dialog
+      const apiFormat = format === "pdf" ? "html" : format;
+
       const res = await fetch("/api/manuscript", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, format }),
+        body: JSON.stringify({ bookId, format: apiFormat }),
       });
 
       if (!res.ok) {
@@ -109,6 +157,12 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
         } else {
           setCompileError(err.error || "Compilation failed.");
         }
+        return;
+      }
+
+      if (format === "pdf") {
+        const html = await res.text();
+        printHtmlAsPdf(html);
         return;
       }
 
@@ -154,7 +208,7 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1.5 w-56 overflow-hidden rounded-xl border border-border bg-popover shadow-xl">
+          <div className="absolute right-0 top-full z-20 mt-1.5 w-56 max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-xl border border-border bg-popover shadow-xl">
             {/* Manuscript compile section */}
             <div className="px-3 py-2 border-b border-border/60">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
