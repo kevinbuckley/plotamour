@@ -163,6 +163,19 @@ function HomeContent() {
           </p>
         </div>
 
+        {/* App screenshot */}
+        <div className="relative mt-16 w-full max-w-4xl">
+          <div className="overflow-hidden rounded-xl border border-border/60 shadow-2xl shadow-primary/5">
+            <img
+              src="/screenshot-app.png"
+              alt="plotamour timeline view showing chapters, plotlines, and scenes organized in a visual grid"
+              className="w-full"
+              width={1920}
+              height={1080}
+            />
+          </div>
+        </div>
+
         {/* Feature cards */}
         <div className="relative mt-20 grid w-full max-w-3xl gap-4 sm:grid-cols-3">
           <FeatureCard
