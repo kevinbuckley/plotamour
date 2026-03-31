@@ -2,6 +2,7 @@ import { getProject, getFirstBookId } from "@/lib/services/projects";
 import { getTimelineData } from "@/lib/services/timeline";
 import { getBook } from "@/lib/services/books";
 import { OutlineView } from "@/components/outline/outline-view";
+import { ExportMenu } from "@/components/shared/export-menu";
 import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 import { EditableBookTitle } from "@/components/shared/editable-book-title";
 import { redirect } from "next/navigation";
@@ -39,6 +40,7 @@ export default async function OutlinePage({
             <EditableBookTitle bookId={bookId} initialTitle={book.title} />
           )}
         </div>
+        <ExportMenu bookId={bookId} />
       </div>
       <div className="flex-1 overflow-auto">
         <OutlineView
