@@ -208,7 +208,7 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 mt-1.5 w-56 max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-xl border border-border bg-popover shadow-xl">
+          <div className="absolute left-0 top-full z-20 mt-1.5 w-56 max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-xl border border-border bg-popover shadow-xl">
             {/* Manuscript compile section */}
             <div className="px-3 py-2 border-b border-border/60">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">

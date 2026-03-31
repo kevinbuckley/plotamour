@@ -38,15 +38,17 @@ export default async function TimelinePage({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 sm:px-6 py-3.5">
+      <div className="flex items-center gap-3 border-b border-border px-4 sm:px-6 py-3.5">
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Timeline</p>
-          <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
+          <div className="flex items-center gap-2">
+            <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
+            <ExportMenu bookId={bookId} />
+          </div>
           {isSeries && book && (
             <EditableBookTitle bookId={bookId} initialTitle={book.title} />
           )}
         </div>
-        <ExportMenu bookId={bookId} />
       </div>
       <div className="flex-1 overflow-auto">
         <TimelineGrid
