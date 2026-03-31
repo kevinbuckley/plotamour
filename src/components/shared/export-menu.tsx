@@ -65,26 +65,21 @@ const MANUSCRIPT_OPTIONS = [
 ];
 
 /**
- * Open HTML content in a new window and trigger the browser print dialog.
- * The user can then save as PDF from the print dialog.
+ * Download a blob response from an API call.
  */
-function printHtmlAsPdf(html: string) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
+function downloadBlob(res: Response, fallbackName: string) {
+  return res.blob().then((blob) => {
+    const disposition = res.headers.get("Content-Disposition");
+    const match = disposition?.match(/filename="(.+?)"/);
+    const filename = match?.[1] ?? fallbackName;
 
-  printWindow.document.write(html);
-  printWindow.document.close();
-
-  // Wait for content to render, then trigger print
-  printWindow.onload = () => {
-    setTimeout(() => {
-      printWindow.print();
-    }, 300);
-  };
-  // Fallback if onload already fired
-  setTimeout(() => {
-    printWindow.print();
-  }, 600);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 }
 
 export function ExportMenu({ bookId }: ExportMenuProps) {
@@ -93,39 +88,19 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
   const [compiling, setCompiling] = useState(false);
   const [compileError, setCompileError] = useState<string | null>(null);
 
-  const handleExport = async (format: "text" | "html" | "json" | "pdf") => {
+  const handleExport = async (format: string) => {
     setExporting(true);
     setOpen(false);
 
     try {
-      // PDF uses the HTML export and opens print dialog
-      const apiFormat = format === "pdf" ? "html" : format;
-
       const res = await fetch("/api/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, format: apiFormat }),
+        body: JSON.stringify({ bookId, format }),
       });
 
       if (!res.ok) throw new Error("Export failed");
-
-      if (format === "pdf") {
-        const html = await res.text();
-        printHtmlAsPdf(html);
-        return;
-      }
-
-      const blob = await res.blob();
-      const disposition = res.headers.get("Content-Disposition");
-      const match = disposition?.match(/filename="(.+?)"/);
-      const filename = match?.[1] ?? `outline.${format === "json" ? "json" : format}`;
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadBlob(res, `outline.${format}`);
     } catch (err) {
       console.error("Export error:", err);
     } finally {
@@ -133,19 +108,16 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
     }
   };
 
-  const handleCompile = async (format: "text" | "html" | "pdf") => {
+  const handleCompile = async (format: string) => {
     setCompiling(true);
     setCompileError(null);
     setOpen(false);
 
     try {
-      // PDF uses the HTML compile and opens print dialog
-      const apiFormat = format === "pdf" ? "html" : format;
-
       const res = await fetch("/api/manuscript", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookId, format: apiFormat }),
+        body: JSON.stringify({ bookId, format }),
       });
 
       if (!res.ok) {
@@ -160,23 +132,7 @@ export function ExportMenu({ bookId }: ExportMenuProps) {
         return;
       }
 
-      if (format === "pdf") {
-        const html = await res.text();
-        printHtmlAsPdf(html);
-        return;
-      }
-
-      const blob = await res.blob();
-      const disposition = res.headers.get("Content-Disposition");
-      const match = disposition?.match(/filename="(.+?)"/);
-      const filename = match?.[1] ?? `manuscript.${format}`;
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadBlob(res, `manuscript.${format}`);
     } catch (err) {
       console.error("Compile error:", err);
       setCompileError("Network error. Please try again.");

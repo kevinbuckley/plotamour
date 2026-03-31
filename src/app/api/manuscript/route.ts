@@ -4,6 +4,7 @@ import {
   generateHtmlManuscript,
   generateTextManuscript,
 } from "@/lib/services/manuscript";
+import { renderManuscriptPdf } from "@/lib/services/pdf";
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +30,16 @@ export async function POST(request: Request) {
     const filename = sanitizeFilename(data.bookTitle);
 
     switch (format) {
+      case "pdf": {
+        const pdfBytes = await renderManuscriptPdf(data);
+        return new Response(pdfBytes as unknown as BodyInit, {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="${filename}-manuscript.pdf"`,
+          },
+        });
+      }
+
       case "text": {
         const text = generateTextManuscript(data);
         return new NextResponse(text, {

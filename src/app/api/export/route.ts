@@ -4,6 +4,7 @@ import {
   generateTextOutline,
   generateHtmlOutline,
 } from "@/lib/services/export";
+import { renderOutlinePdf } from "@/lib/services/pdf";
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +18,16 @@ export async function POST(request: Request) {
     const data = await getExportData(bookId);
 
     switch (format) {
+      case "pdf": {
+        const pdfBytes = await renderOutlinePdf(data);
+        return new Response(pdfBytes as unknown as BodyInit, {
+          headers: {
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="${sanitizeFilename(data.projectTitle)}-outline.pdf"`,
+          },
+        });
+      }
+
       case "text": {
         const text = generateTextOutline(data);
         return new NextResponse(text, {
