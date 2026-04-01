@@ -139,3 +139,25 @@ export async function unlinkCharacterFromScene(
 
   if (error) throw error;
 }
+
+export async function getCharacterPresenceMatrix(bookId: string, projectId: string): Promise<{
+  characterId: string;
+  sceneId: string;
+  chapterId: string;
+}[]> {
+  const supabase = await createClient();
+
+  // Get all scene_characters for scenes in this book, joined with scene data
+  const { data, error } = await supabase
+    .from("scene_characters")
+    .select("character_id, scene_id, scenes!inner(chapter_id, book_id)")
+    .eq("scenes.book_id", bookId);
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    characterId: row.character_id,
+    sceneId: row.scene_id,
+    chapterId: row.scenes.chapter_id,
+  }));
+}
