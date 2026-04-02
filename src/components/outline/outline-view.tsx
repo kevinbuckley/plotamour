@@ -5,9 +5,6 @@ import { cn } from "@/lib/utils/cn";
 import { ChevronRight, ChevronDown, ExternalLink, Loader2, PenLine } from "lucide-react";
 import type { Chapter, Plotline, Scene, SceneGoogleDoc, WritingStatus } from "@/lib/types/database";
 import { PacingHeartbeat } from "./pacing-heartbeat";
-import { StoryRiver } from "@/components/visualizations/story-river";
-import { TheSpine } from "@/components/visualizations/the-spine";
-import { StainedGlass } from "@/components/visualizations/stained-glass";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
 
@@ -153,27 +150,6 @@ export function OutlineView({ projectId, chapters, plotlines, scenes: initialSce
       {scenes.length >= 2 && (
         <div className="mb-8">
           <PacingHeartbeat chapters={chapters} plotlines={plotlines} scenes={scenes} />
-        </div>
-      )}
-
-      {/* Story River visualization */}
-      {chapters.length >= 2 && scenes.length > 0 && (
-        <div className="mb-8">
-          <StoryRiver chapters={chapters} plotlines={plotlines} scenes={scenes} />
-        </div>
-      )}
-
-      {/* The Spine visualization */}
-      {chapters.length >= 1 && scenes.length > 0 && (
-        <div className="mb-8">
-          <TheSpine chapters={chapters} plotlines={plotlines} scenes={scenes} />
-        </div>
-      )}
-
-      {/* Stained Glass visualization */}
-      {scenes.length > 0 && (
-        <div className="mb-8">
-          <StainedGlass chapters={chapters} plotlines={plotlines} scenes={scenes} />
         </div>
       )}
 
