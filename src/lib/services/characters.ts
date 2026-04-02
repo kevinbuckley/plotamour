@@ -155,9 +155,13 @@ export async function getCharacterPresenceMatrix(bookId: string, projectId: stri
 
   if (error) throw error;
 
-  return (data ?? []).map((row: any) => ({
-    characterId: row.character_id,
-    sceneId: row.scene_id,
-    chapterId: row.scenes.chapter_id,
-  }));
+  type PresenceRow = { character_id: string; scene_id: string; scenes: { chapter_id: string; book_id: string } | { chapter_id: string; book_id: string }[] };
+  return (data as unknown as PresenceRow[] ?? []).map((row) => {
+    const scenes = Array.isArray(row.scenes) ? row.scenes[0] : row.scenes;
+    return {
+      characterId: row.character_id,
+      sceneId: row.scene_id,
+      chapterId: scenes.chapter_id,
+    };
+  });
 }
