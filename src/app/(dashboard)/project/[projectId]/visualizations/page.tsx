@@ -6,7 +6,6 @@ import { EditableBookTitle } from "@/components/shared/editable-book-title";
 import { PacingHeartbeat } from "@/components/outline/pacing-heartbeat";
 import { StoryRiver } from "@/components/visualizations/story-river";
 import { TheSpine } from "@/components/visualizations/the-spine";
-import { StainedGlass } from "@/components/visualizations/stained-glass";
 import { redirect } from "next/navigation";
 
 export default async function VisualizationsPage({
@@ -63,9 +62,6 @@ export default async function VisualizationsPage({
             {chapters.length >= 1 && (
               <TheSpine chapters={chapters} plotlines={plotlines} scenes={scenes} />
             )}
-
-            {/* Stained Glass */}
-            <StainedGlass chapters={chapters} plotlines={plotlines} scenes={scenes} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
