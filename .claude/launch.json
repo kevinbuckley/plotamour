@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "plotamour",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "remotion",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["video:preview"],
+      "port": 3100
+    }
+  ]
+}

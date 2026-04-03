@@ -45,22 +45,22 @@ export function ResumeBanner({ projectId, bookId }: ResumeBannerProps) {
   }
 
   return (
-    <div className="mx-4 sm:mx-6 mb-2 mt-3">
-      <div className="group relative overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md">
+    <div className="mx-4 sm:mx-6 mb-2 mt-3 overflow-hidden">
+      <div className="group relative inline-flex overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all hover:shadow-md">
         {/* Plotline color accent */}
         <div
           className="absolute left-0 top-0 h-full w-[3px]"
           style={{ backgroundColor: lastScene.plotlineColor }}
         />
 
-        <div className="flex items-center gap-4 px-5 py-3.5 pl-6">
+        <div className="inline-flex items-center gap-4 px-5 py-3.5 pl-6">
           {/* Clock icon */}
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
             <Clock className="h-4.5 w-4.5 text-primary" />
           </div>
 
           {/* Text */}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <p className="text-sm">
               <span className="text-muted-foreground">
                 Pick up where you left off —{" "}
