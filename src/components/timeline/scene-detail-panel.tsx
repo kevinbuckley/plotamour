@@ -387,6 +387,75 @@ export function SceneDetailPanel({
             />
           </div>
 
+          {/* Google Docs section */}
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-4 py-3">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
+                <FileText className="h-4 w-4 text-blue-600" />
+              </div>
+              <h3 className="text-sm font-semibold">Google Docs</h3>
+            </div>
+
+            <div className="p-4">
+              {doc ? (
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${writingStatusClass[doc.writing_status] ?? "bg-gray-100 text-gray-500"}`}
+                    >
+                      {writingStatusLabel[doc.writing_status] ?? doc.writing_status}
+                    </span>
+                    {doc.word_count > 0 && (
+                      <span className="tabular-nums text-sm font-medium text-foreground/70">
+                        {doc.word_count.toLocaleString()} <span className="font-normal text-muted-foreground">words</span>
+                      </span>
+                    )}
+                  </div>
+                  {doc.last_synced_at && (
+                    <p className="text-[11px] text-muted-foreground/70">
+                      Synced {new Date(doc.last_synced_at).toLocaleString()}
+                    </p>
+                  )}
+                  <Button onClick={handleOpenDoc} className="w-full gap-2" variant="outline" size="sm">
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Open in Google Docs
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Button
+                    onClick={handleCreateDoc}
+                    disabled={creatingDoc}
+                    className="w-full gap-2"
+                    size="sm"
+                  >
+                    {creatingDoc ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5" />
+                    )}
+                    {creatingDoc ? "Creating doc..." : "Write in Google Docs"}
+                  </Button>
+                  {docError && (
+                    docError === "reconnect" ? (
+                      <p className="text-xs text-destructive">
+                        Google Docs not connected.{" "}
+                        <a
+                          href={`/auth/login?reconnect=true&next=${encodeURIComponent(window.location.pathname)}`}
+                          className="underline hover:no-underline"
+                        >
+                          Connect Google Docs →
+                        </a>
+                      </p>
+                    ) : (
+                      <p className="text-xs text-destructive">{docError}</p>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Summary */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Summary</label>
@@ -664,74 +733,6 @@ export function SceneDetailPanel({
             </div>
           </div>
 
-          {/* Google Docs section */}
-          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-            <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-4 py-3">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
-                <FileText className="h-4 w-4 text-blue-600" />
-              </div>
-              <h3 className="text-sm font-semibold">Google Docs</h3>
-            </div>
-
-            <div className="p-4">
-              {doc ? (
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${writingStatusClass[doc.writing_status] ?? "bg-gray-100 text-gray-500"}`}
-                    >
-                      {writingStatusLabel[doc.writing_status] ?? doc.writing_status}
-                    </span>
-                    {doc.word_count > 0 && (
-                      <span className="tabular-nums text-sm font-medium text-foreground/70">
-                        {doc.word_count.toLocaleString()} <span className="font-normal text-muted-foreground">words</span>
-                      </span>
-                    )}
-                  </div>
-                  {doc.last_synced_at && (
-                    <p className="text-[11px] text-muted-foreground/70">
-                      Synced {new Date(doc.last_synced_at).toLocaleString()}
-                    </p>
-                  )}
-                  <Button onClick={handleOpenDoc} className="w-full gap-2" variant="outline" size="sm">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    Open in Google Docs
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleCreateDoc}
-                    disabled={creatingDoc}
-                    className="w-full gap-2"
-                    size="sm"
-                  >
-                    {creatingDoc ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <FileText className="h-3.5 w-3.5" />
-                    )}
-                    {creatingDoc ? "Creating doc..." : "Write in Google Docs"}
-                  </Button>
-                  {docError && (
-                    docError === "reconnect" ? (
-                      <p className="text-xs text-destructive">
-                        Google Docs not connected.{" "}
-                        <a
-                          href={`/auth/login?reconnect=true&next=${encodeURIComponent(window.location.pathname)}`}
-                          className="underline hover:no-underline"
-                        >
-                          Connect Google Docs →
-                        </a>
-                      </p>
-                    ) : (
-                      <p className="text-xs text-destructive">{docError}</p>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Footer */}

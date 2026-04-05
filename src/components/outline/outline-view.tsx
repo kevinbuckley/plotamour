@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
 import { ChevronRight, ChevronDown, ExternalLink, Loader2, PenLine } from "lucide-react";
 import type { Chapter, Plotline, Scene, SceneGoogleDoc, WritingStatus } from "@/lib/types/database";
-import { PacingHeartbeat } from "./pacing-heartbeat";
+
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
 
@@ -145,13 +145,6 @@ export function OutlineView({ projectId, chapters, plotlines, scenes: initialSce
           </div>
         )}
       </div>
-
-      {/* Pacing heartbeat visualization */}
-      {scenes.length >= 2 && (
-        <div className="mb-8">
-          <PacingHeartbeat chapters={chapters} plotlines={plotlines} scenes={scenes} />
-        </div>
-      )}
 
       {/* Outline tree */}
       <div className="space-y-2">
