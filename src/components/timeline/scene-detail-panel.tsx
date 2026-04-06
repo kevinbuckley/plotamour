@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles } from "lucide-react";
 import { TagPicker } from "@/components/shared/tag-picker";
+import { useAi } from "@/lib/hooks/use-ai";
 import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag, StoryPromise } from "@/lib/types/database";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
@@ -67,6 +68,7 @@ export function SceneDetailPanel({
   const [linkedPlaceIds, setLinkedPlaceIds] = useState<string[]>([]);
   const [tagIds, setTagIds] = useState<string[]>([]);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
+  const ai = useAi({ bookId: scene.book_id });
   const [showPlacePicker, setShowPlacePicker] = useState(false);
   const [promises, setPromises] = useState<{id: string; description: string; resolved: boolean; isPlant: boolean; payoff_scene_id: string | null}[]>([]);
   const [showPromiseInput, setShowPromiseInput] = useState(false);
@@ -477,6 +479,56 @@ export function SceneDetailPanel({
               onBlur={handleSave}
               placeholder="The tension or challenge..."
             />
+          </div>
+
+          {/* AI Brainstorm */}
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-4 py-3">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100">
+                <Sparkles className="h-4 w-4 text-purple-600" />
+              </div>
+              <h3 className="text-sm font-semibold">AI Brainstorm</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1.5 text-xs"
+                  disabled={ai.loading}
+                  onClick={() => ai.run("what-if", { sceneId: scene.id })}
+                >
+                  {ai.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                  What If...
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-1.5 text-xs"
+                  disabled={ai.loading}
+                  onClick={() => ai.run("scene-ideas", { sceneId: scene.id })}
+                >
+                  {ai.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                  Scene Ideas
+                </Button>
+              </div>
+              {ai.error && (
+                <p className="text-xs text-destructive">{ai.error}</p>
+              )}
+              {ai.result && (
+                <div className="relative">
+                  <button
+                    onClick={ai.clear}
+                    className="absolute right-0 top-0 rounded-md p-1 text-muted-foreground/40 transition-colors hover:bg-muted hover:text-muted-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                  <div className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-foreground/80 whitespace-pre-wrap pr-6">
+                    {ai.result}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Move scene */}
