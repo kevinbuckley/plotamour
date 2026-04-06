@@ -489,6 +489,7 @@ export function SceneDetailPanel({
                 <Sparkles className="h-4 w-4 text-purple-600" />
               </div>
               <h3 className="text-sm font-semibold">AI Brainstorm</h3>
+              <span className="text-[10px] text-muted-foreground/60">~10 sec</span>
             </div>
             <div className="p-4 space-y-3">
               <div className="flex gap-2">
