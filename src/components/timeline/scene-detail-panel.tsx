@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles } from "lucide-react";
 import { TagPicker } from "@/components/shared/tag-picker";
 import { useAi } from "@/lib/hooks/use-ai";
+import ReactMarkdown from "react-markdown";
 import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag, StoryPromise } from "@/lib/types/database";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
@@ -523,8 +524,8 @@ export function SceneDetailPanel({
                   >
                     <X className="h-3 w-3" />
                   </button>
-                  <div className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-foreground/80 whitespace-pre-wrap pr-6">
-                    {ai.result}
+                  <div className="rounded-lg bg-muted/50 p-3 text-xs leading-relaxed text-foreground/80 pr-6 prose prose-xs prose-neutral max-w-none [&_h1]:text-sm [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-xs [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1.5 [&_ul]:my-1 [&_ul]:pl-4 [&_ol]:my-1 [&_ol]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground">
+                    <ReactMarkdown>{ai.result}</ReactMarkdown>
                   </div>
                 </div>
               )}
