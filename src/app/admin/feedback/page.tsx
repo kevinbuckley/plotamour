@@ -1,5 +1,7 @@
 import { createServiceClient } from "@/lib/db/server";
 
+export const dynamic = "force-dynamic";
+
 interface FeatureRequest {
   id: string;
   user_id: string | null;
