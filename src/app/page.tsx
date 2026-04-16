@@ -32,6 +32,8 @@ function HomeContent() {
   const next = searchParams.get("next") ?? "/projects";
   const code = searchParams.get("code");
   const [exchangingCode, setExchangingCode] = useState(!!code);
+  const [signingIn, setSigningIn] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Handle auth code that Supabase redirects to the Site URL (PKCE flow)
   useEffect(() => {
@@ -50,18 +52,30 @@ function HomeContent() {
   }, [code, next, router]);
 
   const handleLogin = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        scopes: "https://www.googleapis.com/auth/drive.file",
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
+    setSigningIn(true);
+    setAuthError(null);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          scopes: "https://www.googleapis.com/auth/drive.file",
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
-      },
-    });
+      });
+      if (error) {
+        setAuthError(error.message);
+        setSigningIn(false);
+      }
+      // on success the browser navigates away — no cleanup needed
+    } catch (e) {
+      setAuthError("Something went wrong. Please try again.");
+      setSigningIn(false);
+    }
   };
 
   if (exchangingCode) {
@@ -91,9 +105,10 @@ function HomeContent() {
         </div>
         <button
           onClick={handleLogin}
-          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-all duration-150 hover:border-primary/40 hover:shadow-md hover:text-primary"
+          disabled={signingIn}
+          className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium shadow-sm transition-all duration-150 hover:border-primary/40 hover:shadow-md hover:text-primary disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Sign in
+          {signingIn ? "Signing in…" : "Sign in"}
         </button>
       </header>
 
@@ -152,11 +167,23 @@ function HomeContent() {
           {/* Sign-in button */}
           <button
             onClick={handleLogin}
-            className="mt-10 inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_4px_20px_oklch(0.488_0.183_274.376/0.12)] active:scale-[0.98]"
+            disabled={signingIn}
+            className="mt-10 inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-semibold shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_4px_20px_oklch(0.488_0.183_274.376/0.12)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-md"
           >
-            <GoogleIcon />
-            Continue with Google — it&apos;s free
+            {signingIn ? (
+              <svg className="h-4 w-4 animate-spin text-muted-foreground" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <GoogleIcon />
+            )}
+            {signingIn ? "Redirecting to Google…" : "Continue with Google — it's free"}
           </button>
+
+          {authError && (
+            <p className="mt-3 text-xs text-destructive">{authError}</p>
+          )}
 
           <p className="mt-3 text-xs text-muted-foreground">
             No password needed. Just your Google account.
