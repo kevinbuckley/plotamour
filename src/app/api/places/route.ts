@@ -7,6 +7,7 @@ import {
   unlinkPlaceFromScene,
   getScenePlaceIds,
   getPlaceSceneIds,
+  getPlaceScenesDetailed,
 } from "@/lib/services/places";
 import { NextResponse } from "next/server";
 
@@ -51,6 +52,10 @@ export async function POST(request: Request) {
       case "getPlaceScenes": {
         const ids = await getPlaceSceneIds(body.placeId);
         return NextResponse.json(ids);
+      }
+      case "getPlaceScenesDetailed": {
+        const scenes = await getPlaceScenesDetailed(body.placeId);
+        return NextResponse.json(scenes);
       }
       default:
         return NextResponse.json({ error: "Unknown action" }, { status: 400 });

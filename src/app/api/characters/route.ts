@@ -7,6 +7,11 @@ import {
   unlinkCharacterFromScene,
   getSceneCharacterIds,
   getCharacterSceneIds,
+  getCharacterScenesDetailed,
+  getCharacterRelations,
+  addCharacterRelation,
+  updateCharacterRelation,
+  deleteCharacterRelation,
 } from "@/lib/services/characters";
 import { NextResponse } from "next/server";
 
@@ -51,6 +56,34 @@ export async function POST(request: Request) {
       case "getCharacterScenes": {
         const ids = await getCharacterSceneIds(body.characterId);
         return NextResponse.json(ids);
+      }
+      case "getCharacterScenesDetailed": {
+        const scenes = await getCharacterScenesDetailed(body.characterId);
+        return NextResponse.json(scenes);
+      }
+      case "getRelations": {
+        const relations = await getCharacterRelations(body.characterId);
+        return NextResponse.json(relations);
+      }
+      case "addRelation": {
+        const relation = await addCharacterRelation({
+          fromCharacterId: body.fromCharacterId,
+          toCharacterId: body.toCharacterId,
+          relationType: body.relationType ?? "",
+          description: body.description,
+        });
+        return NextResponse.json(relation);
+      }
+      case "updateRelation": {
+        const relation = await updateCharacterRelation(body.id, {
+          relation_type: body.relationType,
+          description: body.description,
+        });
+        return NextResponse.json(relation);
+      }
+      case "deleteRelation": {
+        await deleteCharacterRelation(body.id);
+        return NextResponse.json({ ok: true });
       }
       default:
         return NextResponse.json({ error: "Unknown action" }, { status: 400 });

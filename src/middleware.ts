@@ -41,8 +41,12 @@ export async function middleware(request: NextRequest) {
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.searchParams.set("redirect", request.nextUrl.pathname);
+    if (process.env.NODE_ENV === "development") {
+      url.pathname = "/api/dev-login";
+    } else {
+      url.pathname = "/";
+      url.searchParams.set("redirect", request.nextUrl.pathname);
+    }
     return NextResponse.redirect(url);
   }
 

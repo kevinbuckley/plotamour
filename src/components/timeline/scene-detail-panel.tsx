@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles } from "lucide-react";
+import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles, Archive } from "lucide-react";
 import { TagPicker } from "@/components/shared/tag-picker";
 import { useAi } from "@/lib/hooks/use-ai";
 import ReactMarkdown from "react-markdown";
@@ -23,6 +23,7 @@ interface SceneDetailPanelProps {
   tags: Tag[];
   onUpdate: (id: string, data: Partial<Scene>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onArchive: (id: string) => Promise<void>;
   onMove: (sceneId: string, chapterId: string, plotlineId: string) => Promise<void>;
   onClose: () => void;
   onTagCreated: (tag: Tag) => void;
@@ -55,6 +56,7 @@ export function SceneDetailPanel({
   tags,
   onUpdate,
   onDelete,
+  onArchive,
   onMove,
   onClose,
   onTagCreated,
@@ -790,17 +792,28 @@ export function SceneDetailPanel({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border p-4 flex gap-2">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="flex-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             onClick={() => {
-              if (confirm("Delete this scene?")) onDelete(scene.id);
+              if (confirm("Archive this scene? You can restore it any time.")) onArchive(scene.id);
+            }}
+          >
+            <Archive className="mr-2 h-4 w-4" />
+            Archive
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => {
+              if (confirm("Delete this scene? This cannot be undone.")) onDelete(scene.id);
             }}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete scene
+            Delete
           </Button>
         </div>
       </div>

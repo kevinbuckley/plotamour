@@ -118,10 +118,10 @@ export function CharacterList({
             {characters.map((character) => {
               const avatarColor = getAvatarColor(character.name);
               return (
-                <button
+                <div
                   key={character.id}
                   onClick={() => setSelectedId(character.id)}
-                  className={`group relative rounded-xl border p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md ${
+                  className={`group relative rounded-xl border p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md cursor-pointer ${
                     selectedId === character.id
                       ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/15"
                       : "border-border bg-card hover:border-primary/40 hover:shadow-sm"
@@ -153,7 +153,7 @@ export function CharacterList({
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -165,6 +165,7 @@ export function CharacterList({
         <CharacterDetail
           character={selectedCharacter}
           projectId={projectId}
+          allCharacters={characters}
           allTags={tags}
           onUpdate={handleUpdate}
           onDelete={handleDelete}

@@ -1,5 +1,5 @@
 import { addChapter, addPlotline, deleteChapter, deletePlotline, updateChapter, updatePlotline, reorderChapters, reorderPlotlines } from "@/lib/services/timeline";
-import { createScene, updateScene, deleteScene, moveScene } from "@/lib/services/scenes";
+import { createScene, updateScene, deleteScene, moveScene, archiveScene, unarchiveScene, getArchivedScenes } from "@/lib/services/scenes";
 import { PLOTLINE_COLORS } from "@/lib/config/constants";
 import { NextResponse } from "next/server";
 
@@ -62,6 +62,18 @@ export async function POST(request: Request) {
       case "moveScene": {
         await moveScene(body.sceneId, body.chapterId, body.plotlineId, body.position ?? 0);
         return NextResponse.json({ ok: true });
+      }
+      case "archiveScene": {
+        await archiveScene(body.id);
+        return NextResponse.json({ ok: true });
+      }
+      case "unarchiveScene": {
+        await unarchiveScene(body.id);
+        return NextResponse.json({ ok: true });
+      }
+      case "getArchivedScenes": {
+        const scenes = await getArchivedScenes(body.bookId);
+        return NextResponse.json(scenes);
       }
       default:
         return NextResponse.json({ error: "Unknown action" }, { status: 400 });

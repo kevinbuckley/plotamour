@@ -43,15 +43,16 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, title, description } = body;
+    const { id, title, description, cover_image_url } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
     }
 
-    const updates: { title?: string; description?: string } = {};
+    const updates: { title?: string; description?: string; cover_image_url?: string | null } = {};
     if (title !== undefined) updates.title = title.trim();
     if (description !== undefined) updates.description = description.trim();
+    if (cover_image_url !== undefined) updates.cover_image_url = cover_image_url;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "No fields to update" }, { status: 400 });

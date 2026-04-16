@@ -19,6 +19,7 @@ export interface Project {
   description: string;
   project_type: ProjectType;
   attribute_templates: Record<string, unknown>;
+  cover_image_url: string | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -66,6 +67,7 @@ export interface Scene {
   conflict: string;
   pov_character_id: string | null;
   position: number;
+  archived_at: string | null;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -90,11 +92,21 @@ export interface Character {
   name: string;
   description: string;
   avatar_url: string | null;
+  aliases: string[];
   custom_attributes: Record<string, unknown>;
   sort_order: number;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface CharacterRelation {
+  id: string;
+  from_character_id: string;
+  to_character_id: string;
+  relation_type: string;
+  description: string;
+  created_at: string;
 }
 
 export interface Place {
@@ -103,6 +115,7 @@ export interface Place {
   name: string;
   description: string;
   image_url: string | null;
+  aliases: string[];
   custom_attributes: Record<string, unknown>;
   sort_order: number;
   deleted_at: string | null;

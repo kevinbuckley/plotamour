@@ -1,7 +1,15 @@
 // Layer 3: Services — character CRUD and scene linking
 
 import { createClient } from "@/lib/db/server";
-import type { Character } from "@/lib/types/database";
+import type { Character, CharacterRelation } from "@/lib/types/database";
+
+export interface SceneMention {
+  sceneId: string;
+  sceneTitle: string;
+  chapterId: string;
+  chapterTitle: string;
+  chapterOrder: number;
+}
 
 export async function getCharacters(projectId: string): Promise<Character[]> {
   const supabase = await createClient();
@@ -67,6 +75,7 @@ export async function updateCharacter(
     name?: string;
     description?: string;
     avatar_url?: string | null;
+    aliases?: string[];
     custom_attributes?: Record<string, unknown>;
   }
 ): Promise<Character> {
@@ -164,4 +173,97 @@ export async function getCharacterPresenceMatrix(bookId: string, projectId: stri
       chapterId: scenes.chapter_id,
     };
   });
+}
+
+export async function getCharacterScenesDetailed(characterId: string): Promise<SceneMention[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("scene_characters")
+    .select("scene_id, scenes!inner(id, title, deleted_at, archived_at, chapter_id, chapters!inner(id, title, sort_order))")
+    .eq("character_id", characterId)
+    .is("scenes.deleted_at", null)
+    .is("scenes.archived_at", null);
+
+  if (error) throw error;
+
+  type Row = {
+    scene_id: string;
+    scenes: {
+      id: string;
+      title: string;
+      chapter_id: string;
+      chapters: { id: string; title: string; sort_order: number };
+    };
+  };
+
+  return ((data as unknown as Row[]) ?? []).map((row) => ({
+    sceneId: row.scenes.id,
+    sceneTitle: row.scenes.title,
+    chapterId: row.scenes.chapter_id,
+    chapterTitle: row.scenes.chapters.title,
+    chapterOrder: row.scenes.chapters.sort_order,
+  })).sort((a, b) => a.chapterOrder - b.chapterOrder);
+}
+
+// ─── Character Relations ────────────────────────────────────────────────────
+
+export async function getCharacterRelations(characterId: string): Promise<CharacterRelation[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("character_relations")
+    .select("*")
+    .or(`from_character_id.eq.${characterId},to_character_id.eq.${characterId}`)
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function addCharacterRelation(input: {
+  fromCharacterId: string;
+  toCharacterId: string;
+  relationType: string;
+  description?: string;
+}): Promise<CharacterRelation> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("character_relations")
+    .insert({
+      from_character_id: input.fromCharacterId,
+      to_character_id: input.toCharacterId,
+      relation_type: input.relationType,
+      description: input.description ?? "",
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCharacterRelation(
+  id: string,
+  input: { relation_type?: string; description?: string }
+): Promise<CharacterRelation> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("character_relations")
+    .update(input)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCharacterRelation(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("character_relations")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
 }

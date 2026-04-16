@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2, MapPin } from "lucide-react";
+import { X, Plus, Trash2, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { TagPicker } from "@/components/shared/tag-picker";
 import type { Place, Tag } from "@/lib/types/database";
+import type { SceneMention } from "@/lib/services/characters";
 
 interface PlaceDetailProps {
   place: Place;
@@ -34,14 +35,20 @@ export function PlaceDetail({
   );
   const [newAttrKey, setNewAttrKey] = useState("");
   const [tagIds, setTagIds] = useState<string[]>([]);
-  const [sceneIds, setSceneIds] = useState<string[]>([]);
+
+  // Aliases
+  const [aliases, setAliases] = useState<string[]>(place.aliases ?? []);
+  const [newAlias, setNewAlias] = useState("");
+
+  // Mentions
+  const [mentions, setMentions] = useState<SceneMention[]>([]);
+  const [mentionsExpanded, setMentionsExpanded] = useState(false);
 
   useEffect(() => {
     setName(place.name);
     setDescription(place.description);
-    setAttributes(
-      (place.custom_attributes as Record<string, string>) ?? {}
-    );
+    setAttributes((place.custom_attributes as Record<string, string>) ?? {});
+    setAliases(place.aliases ?? []);
 
     const controller = new AbortController();
 
@@ -51,19 +58,19 @@ export function PlaceDetail({
       body: JSON.stringify({ action: "getPlaceTags", placeId: place.id }),
       signal: controller.signal,
     })
-      .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
       .then(setTagIds)
-      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load place tags:", e); });
+      .catch((e) => { if (e.name !== "AbortError") console.error(e); });
 
     fetch("/api/places", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "getPlaceScenes", placeId: place.id }),
+      body: JSON.stringify({ action: "getPlaceScenesDetailed", placeId: place.id }),
       signal: controller.signal,
     })
-      .then((r) => { if (!r.ok) throw new Error("Failed to fetch scenes"); return r.json(); })
-      .then(setSceneIds)
-      .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load place scenes:", e); });
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(setMentions)
+      .catch((e) => { if (e.name !== "AbortError") console.error(e); });
 
     return () => controller.abort();
   }, [place.id]);
@@ -72,7 +79,7 @@ export function PlaceDetail({
     try {
       await onUpdate(place.id, { name, description });
     } catch (e) {
-      console.error("Failed to save place:", e);
+      console.error(e);
     }
   };
 
@@ -80,11 +87,9 @@ export function PlaceDetail({
     const updated = { ...attributes, [key]: value };
     setAttributes(updated);
     try {
-      await onUpdate(place.id, {
-        custom_attributes: updated as Record<string, unknown>,
-      });
+      await onUpdate(place.id, { custom_attributes: updated as Record<string, unknown> });
     } catch (e) {
-      console.error("Failed to save attribute:", e);
+      console.error(e);
     }
   };
 
@@ -93,35 +98,63 @@ export function PlaceDetail({
     delete updated[key];
     setAttributes(updated);
     try {
-      await onUpdate(place.id, {
-        custom_attributes: updated as Record<string, unknown>,
-      });
+      await onUpdate(place.id, { custom_attributes: updated as Record<string, unknown> });
     } catch (e) {
-      console.error("Failed to delete attribute:", e);
+      console.error(e);
     }
   };
 
-  const handleAddAttribute = () => {
+  const handleAddAttribute = async () => {
     if (!newAttrKey.trim()) return;
-    setAttributes((prev) => ({ ...prev, [newAttrKey.trim()]: "" }));
+    const key = newAttrKey.trim();
+    const updated = { ...attributes, [key]: "" };
+    setAttributes(updated);
     setNewAttrKey("");
+    try {
+      await onUpdate(place.id, { custom_attributes: updated as Record<string, unknown> });
+    } catch (e) {
+      console.error(e);
+    }
   };
+
+  // ── Aliases ──────────────────────────────────────────────────────────────
+
+  const handleAddAlias = async () => {
+    const alias = newAlias.trim();
+    if (!alias || aliases.includes(alias)) return;
+    const updated = [...aliases, alias];
+    setAliases(updated);
+    setNewAlias("");
+    try {
+      await onUpdate(place.id, { aliases: updated });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRemoveAlias = async (alias: string) => {
+    const updated = aliases.filter((a) => a !== alias);
+    setAliases(updated);
+    try {
+      await onUpdate(place.id, { aliases: updated });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // ── Tags ─────────────────────────────────────────────────────────────────
 
   const handleAddTag = async (tagId: string) => {
     try {
       const res = await fetch("/api/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "addToPlace",
-          placeId: place.id,
-          tagId,
-        }),
+        body: JSON.stringify({ action: "addToPlace", placeId: place.id, tagId }),
       });
-      if (!res.ok) throw new Error("Failed to add tag");
+      if (!res.ok) throw new Error();
       setTagIds((prev) => [...prev, tagId]);
     } catch (e) {
-      console.error("Failed to add tag:", e);
+      console.error(e);
     }
   };
 
@@ -130,16 +163,12 @@ export function PlaceDetail({
       const res = await fetch("/api/tags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "removeFromPlace",
-          placeId: place.id,
-          tagId,
-        }),
+        body: JSON.stringify({ action: "removeFromPlace", placeId: place.id, tagId }),
       });
-      if (!res.ok) throw new Error("Failed to remove tag");
+      if (!res.ok) throw new Error();
       setTagIds((prev) => prev.filter((id) => id !== tagId));
     } catch (e) {
-      console.error("Failed to remove tag:", e);
+      console.error(e);
     }
   };
 
@@ -170,11 +199,40 @@ export function PlaceDetail({
           {/* Name */}
           <div>
             <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Name</label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={handleSave}
-            />
+            <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={handleSave} />
+          </div>
+
+          {/* Aliases */}
+          <div>
+            <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Also Known As</label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {aliases.map((alias) => (
+                <span
+                  key={alias}
+                  className="group inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium"
+                >
+                  {alias}
+                  <button
+                    onClick={() => handleRemoveAlias(alias)}
+                    className="text-muted-foreground/50 transition-colors hover:text-destructive"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                value={newAlias}
+                onChange={(e) => setNewAlias(e.target.value)}
+                placeholder="Add alternate name"
+                className="text-sm"
+                onKeyDown={(e) => { if (e.key === "Enter") handleAddAlias(); }}
+              />
+              <Button variant="outline" size="sm" onClick={handleAddAlias} disabled={!newAlias.trim()}>
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
 
           {/* Description */}
@@ -189,7 +247,6 @@ export function PlaceDetail({
             />
           </div>
 
-          {/* Divider */}
           <div className="border-t border-border/60" />
 
           {/* Custom Attributes */}
@@ -202,12 +259,7 @@ export function PlaceDetail({
                     <label className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">{key}</label>
                     <Input
                       value={value}
-                      onChange={(e) =>
-                        setAttributes((prev) => ({
-                          ...prev,
-                          [key]: e.target.value,
-                        }))
-                      }
+                      onChange={(e) => setAttributes((prev) => ({ ...prev, [key]: e.target.value }))}
                       onBlur={(e) => handleSaveAttribute(key, e.target.value)}
                       className="mt-0.5 h-auto border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
                     />
@@ -221,23 +273,15 @@ export function PlaceDetail({
                 </div>
               ))}
             </div>
-
             <div className="mt-2 flex items-center gap-2">
               <Input
                 value={newAttrKey}
                 onChange={(e) => setNewAttrKey(e.target.value)}
                 placeholder="Add field (e.g. Type, Era)"
                 className="text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddAttribute();
-                }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleAddAttribute(); }}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAddAttribute}
-                disabled={!newAttrKey.trim()}
-              >
+              <Button variant="outline" size="sm" onClick={handleAddAttribute} disabled={!newAttrKey.trim()}>
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -256,24 +300,41 @@ export function PlaceDetail({
             />
           </div>
 
-          {/* Divider */}
           <div className="border-t border-border/60" />
 
           {/* Used In */}
           <div>
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-              Used In
-            </label>
-            {sceneIds.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
+            <button
+              className="flex w-full items-center justify-between"
+              onClick={() => setMentionsExpanded((v) => !v)}
+            >
+              <label className="cursor-pointer text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+                Used In
+                {mentions.length > 0 && (
+                  <span className="ml-1.5 rounded-full bg-sky-100 px-1.5 py-0.5 text-[10px] text-sky-700">
+                    {mentions.length}
+                  </span>
+                )}
+              </label>
+              {mentions.length > 0 && (
+                mentionsExpanded ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+            </button>
+
+            {mentions.length === 0 ? (
+              <p className="mt-1.5 text-xs text-muted-foreground">
                 Link this place to scenes from the scene detail panel.
               </p>
-            ) : (
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-700">
-                <MapPin className="h-3 w-3" />
-                <span>{sceneIds.length} scene{sceneIds.length !== 1 ? "s" : ""}</span>
+            ) : mentionsExpanded ? (
+              <div className="mt-2 space-y-1">
+                {mentions.map((m) => (
+                  <div key={m.sceneId} className="rounded-md border border-border bg-muted/20 px-3 py-2">
+                    <p className="text-xs font-medium text-foreground truncate">{m.sceneTitle}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{m.chapterTitle}</p>
+                  </div>
+                ))}
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 

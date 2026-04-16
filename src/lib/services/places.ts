@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/db/server";
 import type { Place } from "@/lib/types/database";
+import type { SceneMention } from "@/lib/services/characters";
 
 export async function getPlaces(projectId: string): Promise<Place[]> {
   const supabase = await createClient();
@@ -67,6 +68,7 @@ export async function updatePlace(
     name?: string;
     description?: string;
     image_url?: string | null;
+    aliases?: string[];
     custom_attributes?: Record<string, unknown>;
   }
 ): Promise<Place> {
@@ -138,4 +140,35 @@ export async function unlinkPlaceFromScene(
     .eq("place_id", placeId);
 
   if (error) throw error;
+}
+
+export async function getPlaceScenesDetailed(placeId: string): Promise<SceneMention[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("scene_places")
+    .select("scene_id, scenes!inner(id, title, deleted_at, archived_at, chapter_id, chapters!inner(id, title, sort_order))")
+    .eq("place_id", placeId)
+    .is("scenes.deleted_at", null)
+    .is("scenes.archived_at", null);
+
+  if (error) throw error;
+
+  type Row = {
+    scene_id: string;
+    scenes: {
+      id: string;
+      title: string;
+      chapter_id: string;
+      chapters: { id: string; title: string; sort_order: number };
+    };
+  };
+
+  return ((data as unknown as Row[]) ?? []).map((row) => ({
+    sceneId: row.scenes.id,
+    sceneTitle: row.scenes.title,
+    chapterId: row.scenes.chapter_id,
+    chapterTitle: row.scenes.chapters.title,
+    chapterOrder: row.scenes.chapters.sort_order,
+  })).sort((a, b) => a.chapterOrder - b.chapterOrder);
 }

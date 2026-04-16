@@ -95,7 +95,7 @@ export async function createProject(input: {
 
 export async function updateProject(
   id: string,
-  input: { title?: string; description?: string }
+  input: { title?: string; description?: string; cover_image_url?: string | null }
 ): Promise<Project> {
   const supabase = await createClient();
   const { data, error } = await supabase

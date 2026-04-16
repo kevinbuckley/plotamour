@@ -203,6 +203,16 @@ export function TimelineGrid({
     }
   };
 
+  const handleArchiveScene = async (id: string) => {
+    try {
+      await timelineAction({ action: "archiveScene", id });
+      setScenes((prev) => prev.filter((s) => s.id !== id));
+      if (selectedScene?.id === id) setSelectedScene(null);
+    } catch (e) {
+      console.error("Failed to archive scene:", e);
+    }
+  };
+
   const handleRenameChapter = async (id: string, title: string) => {
     try {
       await timelineAction({ action: "updateChapter", id, title });
@@ -690,6 +700,7 @@ export function TimelineGrid({
           tags={tags}
           onUpdate={handleUpdateScene}
           onDelete={handleDeleteScene}
+          onArchive={handleArchiveScene}
           onMove={handleMoveScene}
           onClose={() => setSelectedScene(null)}
           onTagCreated={(tag) => setTags((prev) => [...prev, tag])}

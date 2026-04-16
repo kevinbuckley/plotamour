@@ -86,6 +86,40 @@ export async function deleteScene(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function archiveScene(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("scenes")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function unarchiveScene(id: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("scenes")
+    .update({ archived_at: null })
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function getArchivedScenes(bookId: string): Promise<Scene[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scenes")
+    .select("*")
+    .eq("book_id", bookId)
+    .is("deleted_at", null)
+    .not("archived_at", "is", null)
+    .order("archived_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function moveScene(
   sceneId: string,
   newChapterId: string,

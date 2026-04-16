@@ -68,6 +68,7 @@ export default async function ProjectsPage() {
               projectType={project.project_type}
               updatedAt={project.updated_at}
               hue={getProjectHue(project.id)}
+              coverImageUrl={project.cover_image_url ?? null}
             />
           ))}
         </div>

@@ -28,6 +28,7 @@ export async function getTimelineData(bookId: string): Promise<TimelineData> {
       .select("*, scene_google_docs(*)")
       .eq("book_id", bookId)
       .is("deleted_at", null)
+      .is("archived_at", null)
       .order("position", { ascending: true }),
   ]);
 
