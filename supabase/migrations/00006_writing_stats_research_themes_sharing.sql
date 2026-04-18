@@ -67,7 +67,17 @@ CREATE TABLE project_shares (
   expires_at  TIMESTAMPTZ
 );
 
--- ── Triggers (reuse existing update_updated_at_column function) ──
+-- ── updated_at trigger function (create if not already present) ──
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ── Triggers ─────────────────────────────────────────────────────
 
 CREATE TRIGGER set_updated_at_writing_goals
   BEFORE UPDATE ON writing_goals
