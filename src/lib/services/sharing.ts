@@ -20,9 +20,14 @@ export async function createShare(
   label = ""
 ): Promise<ProjectShare> {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
   const { data, error } = await supabase
     .from("project_shares")
-    .insert({ project_id: projectId, label })
+    .insert({ project_id: projectId, label, user_id: user.id })
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to create share");

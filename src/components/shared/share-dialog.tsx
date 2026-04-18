@@ -14,17 +14,25 @@ export function ShareDialog({ projectId }: ShareDialogProps) {
   const [share, setShare] = useState<ProjectShare | null>(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
+    setError(null);
     fetch("/api/sharing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "getShare", projectId }),
     })
-      .then((r) => r.json())
-      .then(setShare)
-      .catch(console.error);
+      .then(async (r) => {
+        const json = await r.json();
+        if (!r.ok || json?.error) throw new Error(json?.error ?? "Failed to load share");
+        setShare(json as ProjectShare | null);
+      })
+      .catch((e) => {
+        console.error(e);
+        setError(e.message ?? "Failed to load share info");
+      });
   }, [open, projectId]);
 
   const shareUrl = share
@@ -33,16 +41,19 @@ export function ShareDialog({ projectId }: ShareDialogProps) {
 
   const handleCreate = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/sharing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "createShare", projectId }),
       });
-      const newShare = await res.json();
-      setShare(newShare);
-    } catch (e) {
+      const json = await res.json();
+      if (!res.ok || json?.error) throw new Error(json?.error ?? "Failed to create share");
+      setShare(json as ProjectShare);
+    } catch (e: unknown) {
       console.error(e);
+      setError(e instanceof Error ? e.message : "Failed to create share link");
     } finally {
       setLoading(false);
     }
@@ -107,6 +118,12 @@ export function ShareDialog({ projectId }: ShareDialogProps) {
                 <X className="h-4 w-4" />
               </button>
             </div>
+
+            {error && (
+              <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                {error}
+              </div>
+            )}
 
             {share ? (
               <div className="space-y-4">

@@ -189,6 +189,7 @@ export interface Theme {
 export interface ProjectShare {
   id: string;
   project_id: string;
+  user_id: string;
   share_token: string;
   label: string;
   created_at: string;
