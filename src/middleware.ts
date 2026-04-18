@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const publicRoutes = ["/", "/auth/login", "/auth/callback", "/privacy", "/termsofservice", "/api/dev-login", "/dev-callback"];
+const publicPrefixes = ["/share/", "/api/share"];
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -35,9 +36,9 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isPublicRoute = publicRoutes.some(
-    (route) => request.nextUrl.pathname === route
-  );
+  const isPublicRoute =
+    publicRoutes.some((route) => request.nextUrl.pathname === route) ||
+    publicPrefixes.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
