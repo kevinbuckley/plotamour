@@ -93,7 +93,7 @@ export function ResumeBanner({ projectId, bookId }: ResumeBannerProps) {
           <button
             onClick={() => {
               router.push(
-                `/project/${projectId}/timeline?bookId=${lastScene.bookId}`
+                `/project/${projectId}/timeline?bookId=${lastScene.bookId}&scene=${lastScene.sceneId}`
               );
             }}
             className="flex shrink-0 items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/20"

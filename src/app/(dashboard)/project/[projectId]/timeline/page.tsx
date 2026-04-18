@@ -18,10 +18,10 @@ export default async function TimelinePage({
   searchParams,
 }: {
   params: Promise<{ projectId: string }>;
-  searchParams: Promise<{ bookId?: string }>;
+  searchParams: Promise<{ bookId?: string; scene?: string }>;
 }) {
   const { projectId } = await params;
-  const { bookId: bookIdParam } = await searchParams;
+  const { bookId: bookIdParam, scene: sceneIdParam } = await searchParams;
 
   const project = await getProject(projectId);
   if (!project) redirect("/projects");
@@ -69,6 +69,7 @@ export default async function TimelinePage({
           places={places}
           tags={tags}
           themes={themes}
+          initialSceneId={sceneIdParam}
         />
       </div>
     </div>

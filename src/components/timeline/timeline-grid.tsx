@@ -41,6 +41,7 @@ interface TimelineGridProps {
   places: Place[];
   tags: Tag[];
   themes?: Theme[];
+  initialSceneId?: string;
 }
 
 async function timelineAction(body: Record<string, unknown>) {
@@ -63,6 +64,7 @@ export function TimelineGrid({
   places: initialPlaces,
   tags: initialTags,
   themes: initialThemes = [],
+  initialSceneId,
 }: TimelineGridProps) {
   const [chapters, setChapters] = useState(initialChapters);
   const [plotlines, setPlotlines] = useState(initialPlotlines);
@@ -77,6 +79,14 @@ export function TimelineGrid({
   const [activeScene, setActiveScene] = useState<SceneWithDoc | null>(null);
   const [promises, setPromises] = useState<StoryPromise[]>([]);
   const { trackScene } = useRecentScenes(projectId);
+
+  // Auto-open a scene when arriving via the "Continue" banner
+  useEffect(() => {
+    if (!initialSceneId) return;
+    const scene = initialScenes.find((s) => s.id === initialSceneId);
+    if (scene) setSelectedScene(scene);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSceneId]); // only fire on mount / when the ID changes
 
   // Fetch story promises for the book
   useEffect(() => {
