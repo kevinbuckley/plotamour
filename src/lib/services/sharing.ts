@@ -1,7 +1,6 @@
 // Layer 3: Services — project sharing (read-only share links)
 
 import { createClient } from "@/lib/db/server";
-import { createServiceClient } from "@/lib/db/server";
 import type { ProjectShare } from "@/lib/types/database";
 
 export async function getShare(projectId: string): Promise<ProjectShare | null> {
@@ -36,13 +35,14 @@ export async function deleteShare(shareId: string): Promise<void> {
 }
 
 /**
- * Validate a share token and return the project_id — uses service role
- * so no auth is required (public share page access).
+ * Validate a share token and return the project_id.
+ * Uses the anon key — public RLS policies (migration 00007) allow reading
+ * project_shares without auth so no service role key is needed.
  */
 export async function resolveShareToken(
   token: string
 ): Promise<{ projectId: string; label: string } | null> {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("project_shares")
     .select("project_id, label, expires_at")
@@ -56,11 +56,12 @@ export async function resolveShareToken(
 }
 
 /**
- * Fetch the full export data for a shared project using service role.
- * Reuses the same shape as ExportData so the share page can render it.
+ * Fetch the full export data for a shared project.
+ * Uses the anon key — public RLS policies (migration 00007) allow reading
+ * projects/scenes/characters/places when a valid share exists.
  */
 export async function getSharedProjectData(projectId: string) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   // Get project info
   const { data: project } = await supabase

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { resolveShareToken, getSharedProjectData } from "@/lib/services/sharing";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const { token } = await request.json();
