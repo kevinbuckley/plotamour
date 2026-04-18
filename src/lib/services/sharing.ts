@@ -1,7 +1,13 @@
 // Layer 3: Services — project sharing (read-only share links)
 
+import { randomBytes } from "crypto";
 import { createClient } from "@/lib/db/server";
 import type { ProjectShare } from "@/lib/types/database";
+
+/** Generates a URL-safe base64 token (~24 chars, no +/= chars). */
+function generateShareToken(): string {
+  return randomBytes(18).toString("base64url");
+}
 
 export async function getShare(projectId: string): Promise<ProjectShare | null> {
   const supabase = await createClient();
@@ -27,7 +33,12 @@ export async function createShare(
 
   const { data, error } = await supabase
     .from("project_shares")
-    .insert({ project_id: projectId, label, user_id: user.id })
+    .insert({
+      project_id: projectId,
+      label,
+      user_id: user.id,
+      share_token: generateShareToken(),
+    })
     .select("*")
     .single();
   if (error || !data) throw new Error(error?.message ?? "Failed to create share");
