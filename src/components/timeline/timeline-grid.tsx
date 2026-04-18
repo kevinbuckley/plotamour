@@ -12,6 +12,7 @@ import type {
   Place,
   Tag,
   StoryPromise,
+  Theme,
 } from "@/lib/types/database";
 import { SceneCard } from "./scene-card";
 import { SceneDetailPanel } from "./scene-detail-panel";
@@ -39,6 +40,7 @@ interface TimelineGridProps {
   characters: Character[];
   places: Place[];
   tags: Tag[];
+  themes?: Theme[];
 }
 
 async function timelineAction(body: Record<string, unknown>) {
@@ -60,6 +62,7 @@ export function TimelineGrid({
   characters: initialCharacters,
   places: initialPlaces,
   tags: initialTags,
+  themes: initialThemes = [],
 }: TimelineGridProps) {
   const [chapters, setChapters] = useState(initialChapters);
   const [plotlines, setPlotlines] = useState(initialPlotlines);
@@ -67,6 +70,7 @@ export function TimelineGrid({
   const [characters] = useState(initialCharacters);
   const [places] = useState(initialPlaces);
   const [tags, setTags] = useState(initialTags);
+  const [themes] = useState(initialThemes);
   const [selectedScene, setSelectedScene] = useState<SceneWithDoc | null>(null);
   const [editingChapter, setEditingChapter] = useState<string | null>(null);
   const [editingPlotline, setEditingPlotline] = useState<string | null>(null);
@@ -698,6 +702,7 @@ export function TimelineGrid({
           characters={characters}
           places={places}
           tags={tags}
+          themes={themes}
           onUpdate={handleUpdateScene}
           onDelete={handleDeleteScene}
           onArchive={handleArchiveScene}

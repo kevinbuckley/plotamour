@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, ChevronDown, FileText, Code2, Braces, Loader2, BookOpen, FileDown } from "lucide-react";
+import { Download, ChevronDown, FileText, Code2, Braces, Loader2, BookOpen, FileDown, FileType } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 interface ExportMenuProps {
@@ -30,6 +30,13 @@ const OUTLINE_OPTIONS = [
     ext: ".html",
     icon: Code2,
     description: "Formatted web page",
+  },
+  {
+    format: "docx" as const,
+    label: "Word (.docx)",
+    ext: ".docx",
+    icon: FileType,
+    description: "Microsoft Word document",
   },
   {
     format: "json" as const,

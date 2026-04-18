@@ -3,9 +3,11 @@ import { getTimelineData } from "@/lib/services/timeline";
 import { getCharacters } from "@/lib/services/characters";
 import { getPlaces } from "@/lib/services/places";
 import { getTags } from "@/lib/services/tags";
+import { getThemes } from "@/lib/services/themes";
 import { getBook } from "@/lib/services/books";
 import { TimelineGrid } from "@/components/timeline/timeline-grid";
 import { ExportMenu } from "@/components/shared/export-menu";
+import { ShareDialog } from "@/components/shared/share-dialog";
 import { EditableProjectTitle } from "@/components/shared/editable-project-title";
 import { EditableBookTitle } from "@/components/shared/editable-book-title";
 import { ResumeBanner } from "@/components/shared/resume-banner";
@@ -27,12 +29,13 @@ export default async function TimelinePage({
   const bookId = bookIdParam ?? (await getFirstBookId(projectId));
   if (!bookId) redirect("/projects");
 
-  const [timeline, characters, places, tags, book] = await Promise.all([
+  const [timeline, characters, places, tags, book, themes] = await Promise.all([
     getTimelineData(bookId),
     getCharacters(projectId),
     getPlaces(projectId),
     getTags(projectId),
     getBook(bookId),
+    getThemes(projectId),
   ]);
 
   const isSeries = project.project_type === "series";
@@ -44,7 +47,10 @@ export default async function TimelinePage({
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Timeline</p>
           <div className="flex items-center gap-2">
             <EditableProjectTitle projectId={projectId} initialTitle={project.title} />
-            <ExportMenu bookId={bookId} />
+            <div className="flex items-center gap-2">
+              <ExportMenu bookId={bookId} />
+              <ShareDialog projectId={projectId} />
+            </div>
           </div>
           {isSeries && book && (
             <EditableBookTitle bookId={bookId} initialTitle={book.title} />
@@ -62,6 +68,7 @@ export default async function TimelinePage({
           characters={characters}
           places={places}
           tags={tags}
+          themes={themes}
         />
       </div>
     </div>

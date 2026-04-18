@@ -9,7 +9,7 @@ import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles, Arc
 import { TagPicker } from "@/components/shared/tag-picker";
 import { useAi } from "@/lib/hooks/use-ai";
 import ReactMarkdown from "react-markdown";
-import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag, StoryPromise } from "@/lib/types/database";
+import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag, StoryPromise, Theme } from "@/lib/types/database";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
 
@@ -21,6 +21,7 @@ interface SceneDetailPanelProps {
   characters: Character[];
   places: Place[];
   tags: Tag[];
+  themes?: Theme[];
   onUpdate: (id: string, data: Partial<Scene>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onArchive: (id: string) => Promise<void>;
@@ -54,6 +55,7 @@ export function SceneDetailPanel({
   characters,
   places,
   tags,
+  themes = [],
   onUpdate,
   onDelete,
   onArchive,
@@ -76,6 +78,7 @@ export function SceneDetailPanel({
   const [promises, setPromises] = useState<{id: string; description: string; resolved: boolean; isPlant: boolean; payoff_scene_id: string | null}[]>([]);
   const [showPromiseInput, setShowPromiseInput] = useState(false);
   const [newPromiseText, setNewPromiseText] = useState("");
+  const [themeIds, setThemeIds] = useState<string[]>([]);
 
   const currentChapter = chapters.find((c) => c.id === scene.chapter_id);
   const currentPlotline = plotlines.find((p) => p.id === scene.plotline_id);
@@ -121,6 +124,17 @@ export function SceneDetailPanel({
       .then((r) => { if (!r.ok) throw new Error("Failed to fetch tags"); return r.json(); })
       .then(setTagIds)
       .catch((e) => { if (e.name !== "AbortError") console.error("Failed to load scene tags:", e); });
+
+    // Fetch scene themes
+    fetch("/api/themes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getSceneThemes", sceneId: scene.id }),
+      signal: controller.signal,
+    })
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(setThemeIds)
+      .catch((e) => { if (e.name !== "AbortError") console.error(e); });
 
     // Fetch story promises
     fetch("/api/story-promises", {
@@ -268,6 +282,28 @@ export function SceneDetailPanel({
     } catch (e) {
       console.error("Failed to remove tag:", e);
     }
+  };
+
+  const handleAddTheme = async (themeId: string) => {
+    try {
+      await fetch("/api/themes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "addToScene", sceneId: scene.id, themeId }),
+      });
+      setThemeIds((prev) => [...prev, themeId]);
+    } catch (e) { console.error(e); }
+  };
+
+  const handleRemoveTheme = async (themeId: string) => {
+    try {
+      await fetch("/api/themes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "removeFromScene", sceneId: scene.id, themeId }),
+      });
+      setThemeIds((prev) => prev.filter((id) => id !== themeId));
+    } catch (e) { console.error(e); }
   };
 
   const handleCreatePromise = async () => {
@@ -717,6 +753,48 @@ export function SceneDetailPanel({
               onCreate={onTagCreated}
             />
           </div>
+
+          {/* Themes */}
+          {themes.length > 0 && (
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Themes</label>
+              <div className="flex flex-wrap gap-1.5">
+                {themeIds.map((tid) => {
+                  const theme = themes.find((t) => t.id === tid);
+                  if (!theme) return null;
+                  return (
+                    <span
+                      key={tid}
+                      className="group inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
+                      style={{ backgroundColor: theme.color }}
+                    >
+                      {theme.name}
+                      <button
+                        onClick={() => handleRemoveTheme(tid)}
+                        className="opacity-70 transition-opacity hover:opacity-100"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </span>
+                  );
+                })}
+                {themes.filter((t) => !themeIds.includes(t.id)).map((theme) => (
+                  <button
+                    key={theme.id}
+                    onClick={() => handleAddTheme(theme.id)}
+                    className="inline-flex items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:border-solid"
+                    style={{ borderColor: theme.color + "80" }}
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: theme.color }}
+                    />
+                    {theme.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Story Threads */}
           <div>

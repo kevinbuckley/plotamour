@@ -86,6 +86,15 @@ export interface SceneGoogleDoc {
   updated_at: string;
 }
 
+export interface ResearchLink {
+  id: string;
+  type: "url" | "note";
+  title: string;
+  url?: string;
+  notes?: string;
+  created_at: string;
+}
+
 export interface Character {
   id: string;
   project_id: string;
@@ -94,6 +103,7 @@ export interface Character {
   avatar_url: string | null;
   aliases: string[];
   custom_attributes: Record<string, unknown>;
+  research_links: ResearchLink[];
   sort_order: number;
   deleted_at: string | null;
   created_at: string;
@@ -117,6 +127,7 @@ export interface Place {
   image_url: string | null;
   aliases: string[];
   custom_attributes: Record<string, unknown>;
+  research_links: ResearchLink[];
   sort_order: number;
   deleted_at: string | null;
   created_at: string;
@@ -143,6 +154,45 @@ export interface Tag {
   category: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface WritingGoal {
+  id: string;
+  project_id: string;
+  user_id: string;
+  daily_goal: number;
+  total_goal: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WritingStat {
+  id: string;
+  project_id: string;
+  user_id: string;
+  stat_date: string; // YYYY-MM-DD
+  total_word_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Theme {
+  id: string;
+  project_id: string;
+  name: string;
+  color: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectShare {
+  id: string;
+  project_id: string;
+  share_token: string;
+  label: string;
+  created_at: string;
+  expires_at: string | null;
 }
 
 export interface StoryPromise {

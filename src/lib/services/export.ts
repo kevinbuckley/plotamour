@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/db/server";
 import type { Chapter, Plotline, Scene, Character, Place } from "@/lib/types/database";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 
 export interface ExportData {
   projectTitle: string;
@@ -290,6 +291,198 @@ export function generateHtmlOutline(data: ExportData): string {
 </head>
 <body>${sections.join("\n")}</body>
 </html>`;
+}
+
+/**
+ * Generate a Word (.docx) outline export.
+ */
+export async function generateDocxOutline(data: ExportData): Promise<Buffer> {
+  const children: Paragraph[] = [];
+
+  // Title
+  children.push(
+    new Paragraph({
+      text: data.projectTitle,
+      heading: HeadingLevel.HEADING_1,
+      spacing: { after: 120 },
+    })
+  );
+
+  if (data.bookTitle !== data.projectTitle) {
+    children.push(
+      new Paragraph({
+        text: data.bookTitle,
+        heading: HeadingLevel.HEADING_2,
+        spacing: { after: 80 },
+      })
+    );
+  }
+
+  // Plotlines
+  children.push(
+    new Paragraph({
+      text: "Plotlines",
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: 240, after: 80 },
+    })
+  );
+  for (const p of data.plotlines) {
+    children.push(
+      new Paragraph({
+        bullet: { level: 0 },
+        children: [new TextRun({ text: p.title })],
+        spacing: { after: 40 },
+      })
+    );
+  }
+
+  // Chapters
+  for (const chapter of data.chapters) {
+    children.push(
+      new Paragraph({
+        text: chapter.title,
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 320, after: 80 },
+      })
+    );
+
+    if (chapter.description) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: chapter.description, italics: true, color: "555555" }),
+          ],
+          spacing: { after: 120 },
+        })
+      );
+    }
+
+    for (const scene of chapter.scenes) {
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({ text: scene.title, bold: true }),
+            new TextRun({ text: `  [${scene.plotlineTitle}]`, color: "666666", size: 20 }),
+          ],
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 160, after: 60 },
+        })
+      );
+
+      if (scene.summary) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: scene.summary })],
+            spacing: { after: 60 },
+          })
+        );
+      }
+      if (scene.conflict) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Conflict: ", bold: true }),
+              new TextRun({ text: scene.conflict }),
+            ],
+            spacing: { after: 60 },
+          })
+        );
+      }
+      if (scene.characters.length > 0) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Characters: ", bold: true }),
+              new TextRun({ text: scene.characters.join(", ") }),
+            ],
+            spacing: { after: 60 },
+          })
+        );
+      }
+      if (scene.places.length > 0) {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: "Places: ", bold: true }),
+              new TextRun({ text: scene.places.join(", ") }),
+            ],
+            spacing: { after: 60 },
+          })
+        );
+      }
+    }
+  }
+
+  // Characters
+  if (data.characters.length > 0) {
+    children.push(
+      new Paragraph({
+        text: "Characters",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 320, after: 80 },
+      })
+    );
+    for (const c of data.characters) {
+      children.push(
+        new Paragraph({
+          text: c.name,
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 160, after: 40 },
+        })
+      );
+      if (c.description) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: c.description })],
+            spacing: { after: 80 },
+          })
+        );
+      }
+    }
+  }
+
+  // Places
+  if (data.places.length > 0) {
+    children.push(
+      new Paragraph({
+        text: "Places",
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 320, after: 80 },
+      })
+    );
+    for (const p of data.places) {
+      children.push(
+        new Paragraph({
+          text: p.name,
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 160, after: 40 },
+        })
+      );
+      if (p.description) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: p.description })],
+            spacing: { after: 80 },
+          })
+        );
+      }
+    }
+  }
+
+  const doc = new Document({
+    creator: "plotamour",
+    title: `${data.projectTitle} — Outline`,
+    styles: {
+      default: {
+        document: {
+          run: { font: "Calibri", size: 24 },
+        },
+      },
+    },
+    sections: [{ children }],
+  });
+
+  return Packer.toBuffer(doc);
 }
 
 function esc(str: string): string {

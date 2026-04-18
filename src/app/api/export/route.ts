@@ -3,6 +3,7 @@ import {
   getExportData,
   generateTextOutline,
   generateHtmlOutline,
+  generateDocxOutline,
 } from "@/lib/services/export";
 import { renderOutlinePdf } from "@/lib/services/pdf";
 
@@ -44,6 +45,17 @@ export async function POST(request: Request) {
           headers: {
             "Content-Type": "text/html; charset=utf-8",
             "Content-Disposition": `attachment; filename="${sanitizeFilename(data.projectTitle)}-outline.html"`,
+          },
+        });
+      }
+
+      case "docx": {
+        const docxBuffer = await generateDocxOutline(data);
+        return new Response(docxBuffer as unknown as BodyInit, {
+          headers: {
+            "Content-Type":
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "Content-Disposition": `attachment; filename="${sanitizeFilename(data.projectTitle)}-outline.docx"`,
           },
         });
       }
