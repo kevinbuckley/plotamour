@@ -11,7 +11,7 @@ function ReconnectForm() {
   const handleReconnect = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      callbackURL: `/auth/callback?next=${encodeURIComponent(next)}`,
       scopes: ["https://www.googleapis.com/auth/drive.file"],
     });
   };
