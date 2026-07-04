@@ -1,14 +1,24 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/lib/auth/server";
 
 const publicRoutes = ["/", "/auth/login", "/auth/callback", "/privacy", "/termsofservice", "/api/dev-login"];
 const publicPrefixes = ["/share/", "/api/share", "/api/auth"];
 
-// Neon Auth session token cookie (fixed name in @neondatabase/auth).
-// Presence check only — routes are gated here for UX; actual data access is
-// enforced by RLS via the Data API JWT and server-side auth.getSession().
+// Neon Auth session cookies (fixed names in @neondatabase/auth).
 const SESSION_COOKIE = "__Secure-neon-auth.session_token";
+const CHALLENGE_COOKIE = "__Secure-neon-auth.session_challange";
+const VERIFIER_PARAM = "neon_auth_session_verifier";
 
-export function middleware(request: NextRequest) {
+// Returning from the Google OAuth redirect carries a one-time verifier that
+// must be exchanged for the real session cookie — that exchange logic lives
+// inside the SDK's own middleware, so delegate just this step to it.
+const sdkMiddleware = auth.middleware({ loginUrl: "/auth/login" });
+
+export async function middleware(request: NextRequest) {
+  if (request.nextUrl.searchParams.has(VERIFIER_PARAM) && request.cookies.has(CHALLENGE_COOKIE)) {
+    return sdkMiddleware(request);
+  }
+
   const hasSession = request.cookies.has(SESSION_COOKIE);
 
   const isPublicRoute =
