@@ -8,7 +8,8 @@ export const env = {
   // Neon Auth (Better Auth)
   NEON_AUTH_BASE_URL: (process.env.NEON_AUTH_BASE_URL ??
     process.env.plot_NEON_AUTH_BASE_URL)!,
-  NEON_AUTH_COOKIE_SECRET: process.env.NEON_AUTH_COOKIE_SECRET!,
+  NEON_AUTH_COOKIE_SECRET: (process.env.NEON_AUTH_COOKIE_SECRET ??
+    process.env.plot_NEON_AUTH_COOKIE_SECRET)!,
 
   // Neon Data API (PostgREST) + direct owner connection (bypasses RLS)
   NEXT_PUBLIC_NEON_DATA_API_URL: process.env.NEXT_PUBLIC_NEON_DATA_API_URL!,
