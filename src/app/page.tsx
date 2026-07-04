@@ -40,7 +40,7 @@ function HomeContent() {
       // the browser lands on /auth/callback which upserts the profile row.
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        callbackURL: `/auth/callback?next=${encodeURIComponent(next)}`,
         scopes: ["https://www.googleapis.com/auth/drive.file"],
       });
       if (error) {
