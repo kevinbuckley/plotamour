@@ -9,6 +9,11 @@ const buildOnlyCookieSecret =
     ? "build-placeholder-cookie-secret-32-characters"
     : undefined;
 
+const buildOnlyDataApiUrl =
+  process.env.CI === "true" || process.env.VERCEL_ENV === "preview"
+    ? "https://data-api.example.com"
+    : undefined;
+
 export const env = {
   // Neon Auth (Better Auth)
   NEON_AUTH_BASE_URL: (process.env.NEON_AUTH_BASE_URL ??
@@ -18,7 +23,9 @@ export const env = {
     buildOnlyCookieSecret)!,
 
   // Neon Data API (PostgREST) + direct owner connection (bypasses RLS)
-  NEXT_PUBLIC_NEON_DATA_API_URL: process.env.NEXT_PUBLIC_NEON_DATA_API_URL!,
+  NEXT_PUBLIC_NEON_DATA_API_URL: (process.env.NEXT_PUBLIC_NEON_DATA_API_URL ??
+    process.env.plot_NEXT_PUBLIC_NEON_DATA_API_URL ??
+    buildOnlyDataApiUrl)!,
   DATABASE_URL: (process.env.DATABASE_URL ?? process.env.plot_DATABASE_URL)!,
 
   // Google OAuth (Docs API token refresh for legacy stored refresh tokens)
