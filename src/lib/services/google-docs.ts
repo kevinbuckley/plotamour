@@ -1,6 +1,7 @@
 // Layer 3: Services — Google Docs integration
 
 import { createClient } from "@/lib/db/server";
+import { auth } from "@/lib/auth/server";
 import type { SceneGoogleDoc } from "@/lib/types/database";
 
 /** Thrown when Google returns 401/403, indicating missing or insufficient OAuth scopes. */
@@ -17,6 +18,21 @@ interface GoogleTokens {
 }
 
 async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
+  // Preferred: Neon Auth (Better Auth) stores the Google OAuth tokens in
+  // neon_auth.account and refreshes them on demand.
+  try {
+    const { data } = await auth.getAccessToken({ providerId: "google" });
+    const accessToken = (data as { accessToken?: string } | null)?.accessToken;
+    if (accessToken) {
+      console.log("[GoogleDocs] Using Neon Auth provider access token");
+      return { access_token: accessToken, refresh_token: "" };
+    }
+  } catch {
+    // Fall through to the legacy profiles-based refresh token below.
+  }
+
+  // Legacy fallback: refresh token stored in profiles (migrated from Supabase,
+  // issued to the same Google OAuth client so it still refreshes fine).
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")

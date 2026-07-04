@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
@@ -33,5 +33,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-key-for-build"
+          NEON_AUTH_BASE_URL: "https://auth.example.com"
+          NEON_AUTH_COOKIE_SECRET: "ci-placeholder-cookie-secret-32-characters"
+          NEXT_PUBLIC_NEON_DATA_API_URL: "https://data-api.example.com"
+          DATABASE_URL: "postgresql://user:password@example.com:5432/db"

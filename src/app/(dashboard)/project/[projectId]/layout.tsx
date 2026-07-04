@@ -1,6 +1,5 @@
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { MobileNav } from "@/components/shared/mobile-nav";
-import { TokenSync } from "@/components/shared/token-sync";
 import { getProject } from "@/lib/services/projects";
 import { getBooks } from "@/lib/services/books";
 import { redirect } from "next/navigation";
@@ -21,7 +20,6 @@ export default async function ProjectLayout({
 
   return (
     <div className="flex h-screen">
-      <TokenSync />
       <AppSidebar
         projectId={projectId}
         projectType={project.project_type}

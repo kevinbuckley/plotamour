@@ -290,15 +290,27 @@ describe("deleteScene", () => {
 // moveScene
 // ---------------------------------------------------------------------------
 describe("moveScene", () => {
+  // moveScene queries: scene book_id → chapter/plotline book_id (parallel) → update
+  function setupValidationQueries() {
+    mockClient.from
+      .mockReturnValueOnce(mockQueryBuilder({ book_id: "book-1" })) // scene
+      .mockReturnValueOnce(mockQueryBuilder({ book_id: "book-1" })) // chapter
+      .mockReturnValueOnce(mockQueryBuilder({ book_id: "book-1" })); // plotline
+  }
+
   it("updates chapter, plotline, and position", async () => {
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null));
+    setupValidationQueries();
+    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null)); // update
 
     await moveScene("scene-1", "ch-2", "pl-2", 5);
 
     expect(mockClient.from).toHaveBeenCalledWith("scenes");
+    expect(mockClient.from).toHaveBeenCalledWith("chapters");
+    expect(mockClient.from).toHaveBeenCalledWith("plotlines");
   });
 
   it("resolves without returning a value", async () => {
+    setupValidationQueries();
     mockClient.from.mockReturnValueOnce(mockQueryBuilder(null));
 
     await expect(
@@ -306,7 +318,27 @@ describe("moveScene", () => {
     ).resolves.toBeUndefined();
   });
 
+  it("throws when the scene is not found", async () => {
+    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null));
+
+    await expect(moveScene("scene-1", "ch-2", "pl-2", 5)).rejects.toThrow(
+      "Scene not found"
+    );
+  });
+
+  it("throws when the target chapter belongs to another book", async () => {
+    mockClient.from
+      .mockReturnValueOnce(mockQueryBuilder({ book_id: "book-1" }))
+      .mockReturnValueOnce(mockQueryBuilder({ book_id: "book-OTHER" }))
+      .mockReturnValueOnce(mockQueryBuilder({ book_id: "book-1" }));
+
+    await expect(moveScene("scene-1", "ch-2", "pl-2", 5)).rejects.toThrow(
+      "Target chapter does not belong to the same book"
+    );
+  });
+
   it("throws on error", async () => {
+    setupValidationQueries();
     const dbError = { message: "Move failed" };
     mockClient.from.mockReturnValueOnce(mockQueryBuilder(null, dbError));
 

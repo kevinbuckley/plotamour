@@ -1,8 +1,8 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { createClient } from "@/lib/db/browser";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { authClient } from "@/lib/auth/client";
 import Link from "next/link";
 
 const GoogleIcon = () => (
@@ -28,66 +28,31 @@ const GoogleIcon = () => (
 
 function HomeContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const next = searchParams.get("next") ?? "/projects";
-  const code = searchParams.get("code");
-  const [exchangingCode, setExchangingCode] = useState(!!code);
   const [signingIn, setSigningIn] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-
-  // Handle auth code that Supabase redirects to the Site URL (PKCE flow)
-  useEffect(() => {
-    if (!code) return;
-    const supabase = createClient();
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (!error) {
-        router.replace(next);
-      } else {
-        console.error("Code exchange failed:", error.message);
-        setExchangingCode(false);
-        // Clear the code from URL
-        router.replace("/");
-      }
-    });
-  }, [code, next, router]);
 
   const handleLogin = async () => {
     setSigningIn(true);
     setAuthError(null);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
+      // The OAuth code exchange happens on the Neon Auth server; on success
+      // the browser lands on /auth/callback which upserts the profile row.
+      const { error } = await authClient.signIn.social({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-          scopes: "https://www.googleapis.com/auth/drive.file",
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-        },
+        callbackURL: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        scopes: ["https://www.googleapis.com/auth/drive.file"],
       });
       if (error) {
-        setAuthError(error.message);
+        setAuthError(error.message ?? "Sign-in failed. Please try again.");
         setSigningIn(false);
       }
       // on success the browser navigates away — no cleanup needed
-    } catch (e) {
+    } catch {
       setAuthError("Something went wrong. Please try again.");
       setSigningIn(false);
     }
   };
-
-  if (exchangingCode) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="mb-3 text-2xl animate-pulse">✨</div>
-          <p className="text-sm text-muted-foreground">Signing you in…</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">

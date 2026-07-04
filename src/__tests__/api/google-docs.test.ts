@@ -137,7 +137,7 @@ describe("POST /api/google-docs", () => {
 
       expect(res.status).toBe(400);
       expect(json).toEqual({
-        error: "Failed to create Google Doc. Make sure Google Docs access is authorized.",
+        error: "Failed to create Google Doc. Please try again.",
       });
     });
 
