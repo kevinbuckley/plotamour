@@ -1,46 +1,21 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const publicRoutes = ["/", "/auth/login", "/auth/callback", "/privacy", "/termsofservice", "/api/dev-login", "/dev-callback"];
-const publicPrefixes = ["/share/", "/api/share"];
+const publicRoutes = ["/", "/auth/login", "/auth/callback", "/privacy", "/termsofservice", "/api/dev-login"];
+const publicPrefixes = ["/share/", "/api/share", "/api/auth"];
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+// Neon Auth session token cookie (fixed name in @neondatabase/auth).
+// Presence check only — routes are gated here for UX; actual data access is
+// enforced by RLS via the Data API JWT and server-side auth.getSession().
+const SESSION_COOKIE = "__Secure-neon-auth.session_token";
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export function middleware(request: NextRequest) {
+  const hasSession = request.cookies.has(SESSION_COOKIE);
 
   const isPublicRoute =
     publicRoutes.some((route) => request.nextUrl.pathname === route) ||
     publicPrefixes.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
-  if (!user && !isPublicRoute) {
+  if (!hasSession && !isPublicRoute) {
     const url = request.nextUrl.clone();
     if (process.env.NODE_ENV === "development") {
       url.pathname = "/api/dev-login";
@@ -52,13 +27,13 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is logged in and visits landing page, redirect to dashboard
-  if (user && request.nextUrl.pathname === "/") {
+  if (hasSession && request.nextUrl.pathname === "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/projects";
     return NextResponse.redirect(url);
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {

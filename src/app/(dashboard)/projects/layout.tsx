@@ -1,6 +1,5 @@
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { MobileNav } from "@/components/shared/mobile-nav";
-import { TokenSync } from "@/components/shared/token-sync";
 
 export default function ProjectsLayout({
   children,
@@ -9,7 +8,6 @@ export default function ProjectsLayout({
 }) {
   return (
     <div className="flex h-screen">
-      <TokenSync />
       <AppSidebar />
       <div className="flex flex-1 flex-col min-h-0">
         <MobileNav />

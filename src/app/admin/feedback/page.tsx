@@ -1,4 +1,4 @@
-import { createServiceClient } from "@/lib/db/server";
+import { serviceSql } from "@/lib/db/service";
 
 export const dynamic = "force-dynamic";
 
@@ -10,14 +10,19 @@ interface FeatureRequest {
 }
 
 export default async function AdminFeedbackPage() {
-  const supabase = createServiceClient();
+  let requests: FeatureRequest[] = [];
+  let errorMessage: string | null = null;
 
-  const { data, error } = await supabase
-    .from("feature_requests")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  const requests = (data as FeatureRequest[]) ?? [];
+  try {
+    const sql = serviceSql();
+    requests = (await sql`
+      SELECT id, user_id, body, created_at
+      FROM feature_requests
+      ORDER BY created_at DESC
+    `) as FeatureRequest[];
+  } catch (e) {
+    errorMessage = e instanceof Error ? e.message : "Unknown error";
+  }
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -29,13 +34,13 @@ export default async function AdminFeedbackPage() {
           </p>
         </div>
 
-        {error && (
+        {errorMessage && (
           <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-            Error loading requests: {error.message}
+            Error loading requests: {errorMessage}
           </div>
         )}
 
-        {requests.length === 0 && !error && (
+        {requests.length === 0 && !errorMessage && (
           <p className="text-sm text-muted-foreground">No submissions yet.</p>
         )}
 

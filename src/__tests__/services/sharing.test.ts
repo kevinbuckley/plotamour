@@ -7,6 +7,16 @@ vi.mock("@/lib/db/server", () => ({
   createClient: vi.fn().mockImplementation(() => Promise.resolve(mockClient)),
 }));
 
+// resolveShareToken / getSharedProjectData use the owner SQL connection
+// (Neon Data API has no anonymous role). Mock a queued sql tag: each call
+// resolves to the next queued row array.
+let sqlQueue: unknown[][];
+const mockSql = vi.fn(() => Promise.resolve(sqlQueue.shift() ?? []));
+
+vi.mock("@/lib/db/service", () => ({
+  serviceSql: () => mockSql,
+}));
+
 import {
   getShare,
   createShare,
@@ -30,6 +40,7 @@ const mockShare = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockClient = createMockClient();
+  sqlQueue = [];
 });
 
 // ===========================================================================
@@ -147,13 +158,9 @@ describe("deleteShare", () => {
 // ===========================================================================
 describe("resolveShareToken", () => {
   it("returns projectId and label when token is valid and not expired", async () => {
-    mockClient.from.mockReturnValueOnce(
-      mockQueryBuilder({
-        project_id: "proj-1",
-        label: "Beta readers",
-        expires_at: null,
-      })
-    );
+    sqlQueue.push([
+      { project_id: "proj-1", label: "Beta readers", expires_at: null },
+    ]);
 
     const result = await resolveShareToken("abc123");
 
@@ -161,7 +168,7 @@ describe("resolveShareToken", () => {
   });
 
   it("returns null when token is not found", async () => {
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null));
+    sqlQueue.push([]);
 
     const result = await resolveShareToken("nonexistent");
 
@@ -170,13 +177,9 @@ describe("resolveShareToken", () => {
 
   it("returns null when token is expired", async () => {
     const pastDate = new Date(Date.now() - 1000).toISOString();
-    mockClient.from.mockReturnValueOnce(
-      mockQueryBuilder({
-        project_id: "proj-1",
-        label: "",
-        expires_at: pastDate,
-      })
-    );
+    sqlQueue.push([
+      { project_id: "proj-1", label: "", expires_at: pastDate },
+    ]);
 
     const result = await resolveShareToken("expired-token");
 
@@ -185,13 +188,9 @@ describe("resolveShareToken", () => {
 
   it("returns projectId when token has a future expiry", async () => {
     const futureDate = new Date(Date.now() + 86_400_000).toISOString(); // +1 day
-    mockClient.from.mockReturnValueOnce(
-      mockQueryBuilder({
-        project_id: "proj-1",
-        label: "",
-        expires_at: futureDate,
-      })
-    );
+    sqlQueue.push([
+      { project_id: "proj-1", label: "", expires_at: futureDate },
+    ]);
 
     const result = await resolveShareToken("valid-expiry-token");
 
@@ -241,25 +240,17 @@ describe("getSharedProjectData", () => {
   ];
 
   function setupHappyPath() {
-    // 1. project
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(mockProject));
-    // 2. books — service queries without .single(), so data is an array
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder([mockBook]));
-    // 3-7. chapters, plotlines, scenes, characters, places (parallel)
-    mockClient.from
-      .mockReturnValueOnce(mockQueryBuilder(mockChapters))
-      .mockReturnValueOnce(mockQueryBuilder(mockPlotlines))
-      .mockReturnValueOnce(mockQueryBuilder(mockScenes))
-      .mockReturnValueOnce(mockQueryBuilder(mockCharacters))
-      .mockReturnValueOnce(mockQueryBuilder(mockPlaces));
-    // 8-9. scene_characters, scene_places (parallel)
-    mockClient.from
-      .mockReturnValueOnce(
-        mockQueryBuilder([{ scene_id: "scene-1", character_id: "char-1" }])
-      )
-      .mockReturnValueOnce(
-        mockQueryBuilder([{ scene_id: "scene-1", place_id: "place-1" }])
-      );
+    sqlQueue.push(
+      [mockProject], // 1. project
+      [mockBook], // 2. books
+      mockChapters, // 3-7. chapters, plotlines, scenes, characters, places (parallel)
+      mockPlotlines,
+      mockScenes,
+      mockCharacters,
+      mockPlaces,
+      [{ scene_id: "scene-1", character_id: "char-1" }], // 8-9. join tables (parallel)
+      [{ scene_id: "scene-1", place_id: "place-1" }]
+    );
   }
 
   it("returns enriched project data with scenes, characters, and places", async () => {
@@ -284,7 +275,7 @@ describe("getSharedProjectData", () => {
   });
 
   it("returns null when project is not found", async () => {
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null));
+    sqlQueue.push([]);
 
     const result = await getSharedProjectData("missing-proj");
 
@@ -292,9 +283,7 @@ describe("getSharedProjectData", () => {
   });
 
   it("returns null when no books exist", async () => {
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(mockProject));
-    // books returns empty array
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder([]));
+    sqlQueue.push([mockProject], []);
 
     const result = await getSharedProjectData("proj-1");
 
@@ -303,15 +292,7 @@ describe("getSharedProjectData", () => {
 
   it("uses first book when multiple books exist (standalone)", async () => {
     const secondBook = { ...mockBook, id: "book-2", title: "Sequel" };
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(mockProject));
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder([mockBook, secondBook]));
-    // rest
-    mockClient.from
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]));
+    sqlQueue.push([mockProject], [mockBook, secondBook], [], [], [], [], []);
 
     const result = await getSharedProjectData("proj-1");
 
@@ -322,17 +303,17 @@ describe("getSharedProjectData", () => {
   it("uses 'Unknown' plotline title for orphaned scenes", async () => {
     const orphanScene = { ...mockScenes[0], plotline_id: "nonexistent-pl" };
 
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(mockProject));
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder([mockBook]));
-    mockClient.from
-      .mockReturnValueOnce(mockQueryBuilder(mockChapters))
-      .mockReturnValueOnce(mockQueryBuilder([])) // no plotlines
-      .mockReturnValueOnce(mockQueryBuilder([orphanScene]))
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]));
-    mockClient.from
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]));
+    sqlQueue.push(
+      [mockProject],
+      [mockBook],
+      mockChapters,
+      [], // no plotlines
+      [orphanScene],
+      [],
+      [],
+      [],
+      []
+    );
 
     const result = await getSharedProjectData("proj-1");
 
@@ -341,20 +322,21 @@ describe("getSharedProjectData", () => {
   });
 
   it("skips join-table queries when there are no scenes", async () => {
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(mockProject));
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder([mockBook]));
-    mockClient.from
-      .mockReturnValueOnce(mockQueryBuilder(mockChapters))
-      .mockReturnValueOnce(mockQueryBuilder(mockPlotlines))
-      .mockReturnValueOnce(mockQueryBuilder([])) // no scenes
-      .mockReturnValueOnce(mockQueryBuilder([]))
-      .mockReturnValueOnce(mockQueryBuilder([]));
-    // No additional from() calls should happen for join tables
+    sqlQueue.push(
+      [mockProject],
+      [mockBook],
+      mockChapters,
+      mockPlotlines,
+      [], // no scenes
+      [],
+      []
+    );
+    // No additional sql calls should happen for join tables
 
     const result = await getSharedProjectData("proj-1");
 
     expect(result!.chapters[0].scenes).toEqual([]);
-    // from() was called exactly 7 times (proj + books + 5 parallel)
-    expect(mockClient.from).toHaveBeenCalledTimes(7);
+    // sql was called exactly 7 times (proj + books + 5 parallel)
+    expect(mockSql).toHaveBeenCalledTimes(7);
   });
 });

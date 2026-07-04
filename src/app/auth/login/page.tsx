@@ -2,24 +2,17 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { createClient } from "@/lib/db/browser";
+import { authClient } from "@/lib/auth/client";
 
 function ReconnectForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/projects";
 
   const handleReconnect = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
+    await authClient.signIn.social({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        scopes: "https://www.googleapis.com/auth/drive.file",
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
-        },
-      },
+      callbackURL: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      scopes: ["https://www.googleapis.com/auth/drive.file"],
     });
   };
 

@@ -1,30 +1,38 @@
-import { createClient } from "@/lib/db/server";
+// Post-sign-in landing route. The OAuth code exchange itself happens on the
+// Neon Auth server (via /api/auth/callback/google); Better Auth then redirects
+// here (the callbackURL passed to signIn.social). We upsert the profiles row
+// (replaces the old Supabase handle_new_user DB trigger) and send the user on.
+
+import { auth } from "@/lib/auth/server";
+import { serviceSql } from "@/lib/db/service";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get("code");
   const rawNext = searchParams.get("next") ?? "/projects";
   // Prevent open redirect: ensure next is a relative path starting with /
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/projects";
 
-  if (code) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      // Store the Google refresh token for later Google Docs API access.
-      // Must use the session returned directly from exchangeCodeForSession —
-      // provider_refresh_token is not available via a subsequent getSession() call.
-      if (data.session?.provider_refresh_token) {
-        await supabase
-          .from("profiles")
-          .update({ google_refresh_token: data.session.provider_refresh_token })
-          .eq("id", data.session.user.id);
-      }
-      return NextResponse.redirect(`${origin}${next}`);
-    }
+  const { data: session } = await auth.getSession();
+  const user = session?.user;
+
+  if (!user) {
+    return NextResponse.redirect(`${origin}/?error=auth_failed`);
   }
 
-  // Return the user to the landing page with an error
-  return NextResponse.redirect(`${origin}/?error=auth_failed`);
+  try {
+    const sql = serviceSql();
+    await sql`
+      INSERT INTO profiles (id, display_name, avatar_url)
+      VALUES (${user.id}, ${user.name ?? null}, ${user.image ?? null})
+      ON CONFLICT (id) DO UPDATE
+        SET display_name = COALESCE(profiles.display_name, EXCLUDED.display_name),
+            avatar_url   = COALESCE(profiles.avatar_url, EXCLUDED.avatar_url)
+    `;
+  } catch (e) {
+    // Non-fatal: the user can still use the app; profile creation retries on next login
+    console.error("[auth/callback] profile upsert failed:", e);
+  }
+
+  return NextResponse.redirect(`${origin}${next}`);
 }

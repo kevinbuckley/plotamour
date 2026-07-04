@@ -1,39 +1,83 @@
-// Layer 2: Database — Supabase server client
+// Layer 2: Database — Neon Data API (PostgREST) server client
+//
+// createClient() keeps the same shape the services were written against with
+// supabase-js: `.from(table)...` for queries plus `.auth.getUser()`. Queries
+// go through the Neon Data API with the signed-in user's JWT, so RLS policies
+// (auth.uid()) scope every row. Anonymous requests (share pages) simply omit
+// the Authorization header and rely on the *_public_via_share policies.
 
-import { createServerClient } from "@supabase/ssr";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { NeonPostgrestClient } from "@neondatabase/postgrest-js";
+import { auth } from "@/lib/auth/server";
+import { env } from "@/lib/config/env";
 
-export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // The `setAll` method is called from a Server Component.
-            // This can be ignored if you have middleware refreshing sessions.
-          }
-        },
-      },
-    }
-  );
+export interface DbUser {
+  id: string;
+  email: string;
+  user_metadata: { full_name?: string; avatar_url?: string };
 }
 
-/** Service-role client — bypasses RLS. Only use in server-only admin contexts. */
-export function createServiceClient() {
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+export type DbClient = NeonPostgrestClient & {
+  auth: {
+    getUser(): Promise<{
+      data: { user: DbUser | null };
+      error: Error | null;
+    }>;
+  };
+};
+
+async function getDataApiJwt(): Promise<string | null> {
+  try {
+    const { data } = await auth.token();
+    return (data as { token?: string } | null)?.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function createClient(): Promise<DbClient> {
+  // Resolve the JWT once per client (i.e. once per request in practice);
+  // the Data API validates it against the project JWKS on every call.
+  const jwt = await getDataApiJwt();
+
+  const rest = new NeonPostgrestClient({
+    dataApiUrl: env.NEXT_PUBLIC_NEON_DATA_API_URL,
+    options: {
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+          const headers = new Headers(init?.headers);
+          if (jwt) headers.set("Authorization", `Bearer ${jwt}`);
+          return fetch(input, { ...init, headers });
+        },
+      },
+    },
+  }) as DbClient;
+
+  rest.auth = {
+    async getUser() {
+      try {
+        const { data } = await auth.getSession();
+        const u = data?.user;
+        if (!u) {
+          return { data: { user: null }, error: new Error("Not authenticated") };
+        }
+        return {
+          data: {
+            user: {
+              id: u.id,
+              email: u.email ?? "",
+              user_metadata: {
+                full_name: u.name ?? undefined,
+                avatar_url: u.image ?? undefined,
+              },
+            },
+          },
+          error: null,
+        };
+      } catch (e) {
+        return { data: { user: null }, error: e as Error };
+      }
+    },
+  };
+
+  return rest;
 }
