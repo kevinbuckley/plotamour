@@ -16,12 +16,12 @@ export interface WritingStatsPayload {
  * Get or create the writing goal for a project/user pair.
  */
 export async function getOrCreateGoal(projectId: string): Promise<WritingGoal> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   // Try to get existing
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("writing_goals")
     .select("*")
     .eq("project_id", projectId)
@@ -31,7 +31,7 @@ export async function getOrCreateGoal(projectId: string): Promise<WritingGoal> {
   if (existing) return existing as WritingGoal;
 
   // Create default
-  const { data: created, error } = await supabase
+  const { data: created, error } = await db
     .from("writing_goals")
     .insert({ project_id: projectId, user_id: user.id })
     .select("*")
@@ -48,11 +48,11 @@ export async function updateGoal(
   projectId: string,
   data: { daily_goal?: number; total_goal?: number | null }
 ): Promise<WritingGoal> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await db
     .from("writing_goals")
     .upsert(
       { project_id: projectId, user_id: user.id, ...data },
@@ -73,13 +73,13 @@ export async function recordDailySnapshot(
   projectId: string,
   totalWordCount: number
 ): Promise<void> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) return;
 
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-  await supabase.from("writing_stats").upsert(
+  await db.from("writing_stats").upsert(
     {
       project_id: projectId,
       user_id: user.id,
@@ -95,10 +95,10 @@ export async function recordDailySnapshot(
  * by summing scene_google_docs.word_count across all books.
  */
 export async function getProjectWordCount(projectId: string): Promise<number> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Get all book ids for this project
-  const { data: books } = await supabase
+  const { data: books } = await db
     .from("books")
     .select("id")
     .eq("project_id", projectId)
@@ -109,7 +109,7 @@ export async function getProjectWordCount(projectId: string): Promise<number> {
   const bookIds = books.map((b) => b.id);
 
   // Get all scene ids across those books
-  const { data: scenes } = await supabase
+  const { data: scenes } = await db
     .from("scenes")
     .select("id")
     .in("book_id", bookIds)
@@ -120,7 +120,7 @@ export async function getProjectWordCount(projectId: string): Promise<number> {
   const sceneIds = scenes.map((s) => s.id);
 
   // Sum word counts from google docs
-  const { data: docs } = await supabase
+  const { data: docs } = await db
     .from("scene_google_docs")
     .select("word_count")
     .in("scene_id", sceneIds);
@@ -132,8 +132,8 @@ export async function getProjectWordCount(projectId: string): Promise<number> {
  * Get full writing stats payload for a project.
  */
 export async function getWritingStats(projectId: string): Promise<WritingStatsPayload> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const [goal, totalWordCount] = await Promise.all([
@@ -149,7 +149,7 @@ export async function getWritingStats(projectId: string): Promise<WritingStatsPa
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const since = thirtyDaysAgo.toISOString().slice(0, 10);
 
-  const { data: statsRaw } = await supabase
+  const { data: statsRaw } = await db
     .from("writing_stats")
     .select("*")
     .eq("project_id", projectId)

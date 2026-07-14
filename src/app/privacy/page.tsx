@@ -163,12 +163,12 @@ export default function PrivacyPage() {
           <p>
             Your data is stored securely using{" "}
             <a
-              href="https://supabase.com"
+              href="https://neon.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary underline hover:no-underline"
             >
-              Supabase
+              Neon
             </a>{" "}
             (database and authentication) and served via{" "}
             <a
@@ -216,7 +216,7 @@ export default function PrivacyPage() {
           <ul className="ml-4 mt-2 list-disc space-y-1.5">
             <li>
               <strong className="text-foreground">Service providers:</strong>{" "}
-              We use Supabase for database hosting and authentication, and
+              We use Neon for database hosting and authentication, and
               Vercel for application hosting. These providers process your data
               solely to provide their services to us and are bound by their own
               privacy policies.

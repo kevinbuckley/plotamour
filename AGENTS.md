@@ -7,7 +7,7 @@
 
 - **What:** Plottr-style visual outlining with seamless Google Docs round-trip
 - **Who:** Hobby novelists, all genres
-- **Stack:** Next.js 15 (App Router), Supabase (Postgres + Auth), Tailwind + shadcn/ui, Vercel
+- **Stack:** Next.js 15 (App Router), Neon (Postgres + Auth), Tailwind + shadcn/ui, Vercel
 - **Key Differentiator:** Outline → Google Doc → Outline workflow that doesn't break your flow
 
 ## Where to Look
@@ -39,7 +39,7 @@ Never skip a layer. UI never imports from Database directly. See ARCHITECTURE.md
 
 - TypeScript strict mode, no `any`
 - App Router with server components by default, `"use client"` only when needed
-- Supabase client: server-side via `createServerClient`, client-side via `createBrowserClient`
+- Neon client: auth via `src/lib/auth/`, database access via `src/lib/db/`
 - All database queries go through service layer functions in `src/lib/services/`
 - File naming: `kebab-case` for files, `PascalCase` for components
 - Collocate tests next to source files as `*.test.ts(x)`

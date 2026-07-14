@@ -1,5 +1,5 @@
 // Dev-only convenience login. Signs in (creating on first use) a local dev
-// user with email+password via Neon Auth — replaces the old Supabase
+// user with email+password via Neon Auth — replaces the old Neon
 // magic-link hack. Gated to development just like before.
 
 import { NextResponse } from "next/server";

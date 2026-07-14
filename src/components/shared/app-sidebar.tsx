@@ -37,8 +37,8 @@ export async function AppSidebar({
   const firstBookId = books?.[0]?.id;
 
   // Fetch user for bottom section
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   const fullName = user?.user_metadata?.full_name as string | undefined;
   const email = user?.email ?? "";
   const displayName = fullName ?? email.split("@")[0];

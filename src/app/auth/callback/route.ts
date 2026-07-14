@@ -1,7 +1,7 @@
 // Post-sign-in landing route. The OAuth code exchange itself happens on the
 // Neon Auth server (via /api/auth/callback/google); Better Auth then redirects
 // here (the callbackURL passed to signIn.social). We upsert the profiles row
-// (replaces the old Supabase handle_new_user DB trigger) and send the user on.
+// (replaces the old Neon handle_new_user DB trigger) and send the user on.
 
 import { auth } from "@/lib/auth/server";
 import { serviceSql } from "@/lib/db/service";

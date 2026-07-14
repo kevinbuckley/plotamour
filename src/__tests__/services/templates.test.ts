@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockClient, mockQueryBuilder } from "../mocks/supabase";
+import { createMockClient, mockQueryBuilder } from "../mocks/db";
 
 let mockClient: ReturnType<typeof createMockClient>;
 
@@ -103,7 +103,7 @@ describe("listTemplates", () => {
 });
 
 // ===========================================================================
-// applyTemplate (needs Supabase mocks)
+// applyTemplate (needs Neon mocks)
 // ===========================================================================
 describe("applyTemplate", () => {
   const bookId = "book-1";
@@ -264,7 +264,7 @@ describe("applyTemplate", () => {
 });
 
 // ===========================================================================
-// saveBookAsTemplate (needs Supabase mocks)
+// saveBookAsTemplate (needs Neon mocks)
 // ===========================================================================
 describe("saveBookAsTemplate", () => {
   const bookId = "book-1";

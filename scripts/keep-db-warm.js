@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Keep Supabase database active by making periodic queries.
+ * Keep Neon database active by making periodic queries.
  * Run with: node scripts/keep-db-warm.js
  * Or: node scripts/keep-db-warm.js --once
  */

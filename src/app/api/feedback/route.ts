@@ -3,8 +3,8 @@ import { createClient } from "@/lib/db/server";
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const db = await createClient();
+    const { data: { user } } = await db.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "body is required" }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await db
       .from("feature_requests")
       .insert({ user_id: user.id, body: body.trim() });
 

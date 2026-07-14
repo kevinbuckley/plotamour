@@ -28,8 +28,8 @@ export interface ManuscriptData {
  * Get a fresh Google access token for the current user.
  */
 async function getAccessToken(userId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const { data: profile } = await supabase
+  const db = await createClient();
+  const { data: profile } = await db
     .from("profiles")
     .select("google_refresh_token")
     .eq("id", userId)
@@ -146,12 +146,12 @@ function stripContextHeader(text: string): string {
  * Fetch and compile all Google Docs for a book into a single manuscript.
  */
 export async function compileManuscript(bookId: string): Promise<ManuscriptData> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   // Fetch book info
-  const { data: book, error: bookErr } = await supabase
+  const { data: book, error: bookErr } = await db
     .from("books")
     .select("*, projects(*)")
     .eq("id", bookId)
@@ -161,12 +161,12 @@ export async function compileManuscript(bookId: string): Promise<ManuscriptData>
 
   // Fetch chapters and scenes in order
   const [chaptersRes, scenesRes] = await Promise.all([
-    supabase
+    db
       .from("chapters")
       .select("*")
       .eq("book_id", bookId)
       .order("sort_order", { ascending: true }),
-    supabase
+    db
       .from("scenes")
       .select("*, scene_google_docs(*)")
       .eq("book_id", bookId)
