@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockClient, mockQueryBuilder } from "../mocks/supabase";
+import { createMockClient, mockQueryBuilder } from "../mocks/db";
 
 let mockClient: ReturnType<typeof createMockClient>;
 
@@ -467,7 +467,7 @@ describe("generateHtmlOutline", () => {
 });
 
 // ===========================================================================
-// getExportData (with Supabase mocks)
+// getExportData (with Neon mocks)
 // ===========================================================================
 describe("getExportData", () => {
   it("aggregates book, chapters, plotlines, scenes, characters, places, and links", async () => {

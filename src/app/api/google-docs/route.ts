@@ -13,16 +13,16 @@ export async function POST(request: Request) {
         const scene = await getScene(body.sceneId);
         if (!scene) return NextResponse.json({ error: "Scene not found" }, { status: 404 });
 
-        const supabase = await createClient();
+        const db = await createClient();
 
         // Get book title and chapter info
-        const { data: book } = await supabase
+        const { data: book } = await db
           .from("books")
           .select("title")
           .eq("id", scene.book_id)
           .single();
 
-        const { data: chapters } = await supabase
+        const { data: chapters } = await db
           .from("chapters")
           .select("id, sort_order")
           .eq("book_id", scene.book_id)

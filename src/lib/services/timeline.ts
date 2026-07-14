@@ -10,20 +10,20 @@ export interface TimelineData {
 }
 
 export async function getTimelineData(bookId: string): Promise<TimelineData> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   const [chaptersRes, plotlinesRes, scenesRes] = await Promise.all([
-    supabase
+    db
       .from("chapters")
       .select("*")
       .eq("book_id", bookId)
       .order("sort_order", { ascending: true }),
-    supabase
+    db
       .from("plotlines")
       .select("*")
       .eq("book_id", bookId)
       .order("sort_order", { ascending: true }),
-    supabase
+    db
       .from("scenes")
       .select("*, scene_google_docs(*)")
       .eq("book_id", bookId)
@@ -51,10 +51,10 @@ export async function getTimelineData(bookId: string): Promise<TimelineData> {
 }
 
 export async function addChapter(bookId: string, title: string): Promise<Chapter> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Get the max sort_order
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("chapters")
     .select("sort_order")
     .eq("book_id", bookId)
@@ -63,7 +63,7 @@ export async function addChapter(bookId: string, title: string): Promise<Chapter
 
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("chapters")
     .insert({ book_id: bookId, title, sort_order: nextOrder })
     .select()
@@ -77,8 +77,8 @@ export async function updateChapter(
   id: string,
   input: { title?: string; sort_order?: number }
 ): Promise<Chapter> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("chapters")
     .update(input)
     .eq("id", id)
@@ -90,8 +90,8 @@ export async function updateChapter(
 }
 
 export async function deleteChapter(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("chapters").delete().eq("id", id);
+  const db = await createClient();
+  const { error } = await db.from("chapters").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -100,9 +100,9 @@ export async function addPlotline(
   title: string,
   color: string
 ): Promise<Plotline> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("plotlines")
     .select("sort_order")
     .eq("book_id", bookId)
@@ -111,7 +111,7 @@ export async function addPlotline(
 
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("plotlines")
     .insert({ book_id: bookId, title, color, sort_order: nextOrder })
     .select()
@@ -125,8 +125,8 @@ export async function updatePlotline(
   id: string,
   input: { title?: string; color?: string; sort_order?: number }
 ): Promise<Plotline> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("plotlines")
     .update(input)
     .eq("id", id)
@@ -138,8 +138,8 @@ export async function updatePlotline(
 }
 
 export async function deletePlotline(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("plotlines").delete().eq("id", id);
+  const db = await createClient();
+  const { error } = await db.from("plotlines").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -147,9 +147,9 @@ export async function reorderChapters(
   bookId: string,
   chapterIds: string[]
 ): Promise<void> {
-  const supabase = await createClient();
+  const db = await createClient();
   const updates = chapterIds.map((id, i) =>
-    supabase.from("chapters").update({ sort_order: i }).eq("id", id).eq("book_id", bookId)
+    db.from("chapters").update({ sort_order: i }).eq("id", id).eq("book_id", bookId)
   );
   await Promise.all(updates);
 }
@@ -158,9 +158,9 @@ export async function reorderPlotlines(
   bookId: string,
   plotlineIds: string[]
 ): Promise<void> {
-  const supabase = await createClient();
+  const db = await createClient();
   const updates = plotlineIds.map((id, i) =>
-    supabase.from("plotlines").update({ sort_order: i }).eq("id", id).eq("book_id", bookId)
+    db.from("plotlines").update({ sort_order: i }).eq("id", id).eq("book_id", bookId)
   );
   await Promise.all(updates);
 }

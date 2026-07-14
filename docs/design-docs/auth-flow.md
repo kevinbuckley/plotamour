@@ -6,7 +6,7 @@
 
 ## Overview
 
-plotamour uses Google-only authentication via Supabase Auth. This is intentional:
+plotamour uses Google-only authentication via Neon Auth. This is intentional:
 1. Our users write in Google Docs, so they already have a Google account
 2. We need Google OAuth tokens for Docs API access anyway
 3. One auth method = simpler UX, no password reset flows
@@ -23,17 +23,17 @@ plotamour uses Google-only authentication via Supabase Auth. This is intentional
      - documents (create/read Google Docs)
 4. User grants consent
 5. Google redirects to /auth/callback
-6. Supabase exchanges code for tokens
-7. Supabase creates/updates user record
+6. Neon exchanges code for tokens
+7. Neon creates/updates user record
 8. We store the Google refresh token (encrypted) for Docs API
 9. User is redirected to /dashboard (project list)
 ```
 
 ## Token Management
 
-### Supabase Session
-- Supabase manages session cookies automatically
-- Session refresh is handled by `@supabase/ssr`
+### Neon Session
+- Neon manages session cookies automatically
+- Session refresh is handled by `@neondatabase/auth`
 - Middleware checks session on every request to protected routes
 
 ### Google API Tokens
@@ -54,11 +54,11 @@ Protected routes:  /dashboard  (project list)
 ```
 
 Middleware at `src/middleware.ts` handles protection:
-1. Check for valid Supabase session
+1. Check for valid Neon session
 2. If no session → redirect to `/` with `?redirect=` param
 3. If session exists → continue and attach user to request
 
-## Supabase Configuration
+## Neon Configuration
 
 - Provider: Google
 - Additional scopes: `https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/drive.file`

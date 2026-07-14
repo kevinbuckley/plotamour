@@ -17,4 +17,4 @@ Design docs capture architectural decisions and their rationale. Each doc has a 
 | [Google Docs Integration](./google-docs-integration.md) | accepted | The round-trip writing workflow |
 | [Timeline View](./timeline-view.md) | accepted | Visual storyboard grid design |
 | [Data Model](./data-model.md) | accepted | Entity relationships and domain model |
-| [Auth Flow](./auth-flow.md) | accepted | Google OAuth via Supabase |
+| [Auth Flow](./auth-flow.md) | accepted | Google OAuth via Neon |

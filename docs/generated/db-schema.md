@@ -1,15 +1,15 @@
 # Database Schema
 
-> Auto-generated reference. Source of truth is the Supabase migrations in `supabase/migrations/`.
+> Auto-generated reference. Source of truth is the Neon migrations in `neon/migrations/`.
 
 ## Tables
 
-### users (extends Supabase auth.users)
+### users (extends Neon Auth users)
 
 ```sql
--- Extra fields on the public profile, linked to auth.users
+-- Extra fields on the public profile, linked to Neon Auth users
 CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY,
   display_name TEXT,
   avatar_url TEXT,
   google_refresh_token TEXT,  -- encrypted, for Google Docs API
@@ -23,7 +23,7 @@ CREATE TABLE public.profiles (
 ```sql
 CREATE TABLE projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   title TEXT NOT NULL,
   description TEXT DEFAULT '',
   project_type TEXT NOT NULL DEFAULT 'standalone'

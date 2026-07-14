@@ -2,7 +2,7 @@
 
 ## System Overview
 
-plotamour is a server-rendered Next.js application deployed on Vercel with Supabase as the backend (Postgres database + Google OAuth). It integrates with Google Docs API for the outline↔writing round-trip workflow.
+plotamour is a server-rendered Next.js application deployed on Vercel with Neon as the backend (Postgres database + Google OAuth). It integrates with Google Docs API for the outline↔writing round-trip workflow.
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -20,7 +20,7 @@ plotamour is a server-rendered Next.js application deployed on Vercel with Supab
 │  │  └────┬────────────────────────┬───────┘  │   │
 │  │       │                        │           │   │
 │  │  ┌────▼─────────┐  ┌──────────▼────────┐  │   │
-│  │  │  Supabase    │  │  Google Docs API  │  │   │
+│  │  │  Neon        │  │  Google Docs API  │  │   │
 │  │  │  (DB + Auth) │  │  (OAuth2)         │  │   │
 │  │  └──────────────┘  └───────────────────┘  │   │
 │  └───────────────────────────────────────────┘   │
@@ -34,7 +34,7 @@ Dependencies flow strictly downward. No layer may import from a layer above it.
 ```
 Layer 0: Types        — src/lib/types/         (pure TS types, zero imports)
 Layer 1: Config       — src/lib/config/        (env vars, constants)
-Layer 2: Database     — src/lib/db/            (Supabase client, query helpers)
+Layer 2: Database     — src/lib/db/            (Neon client, query helpers)
 Layer 3: Services     — src/lib/services/      (business logic, Google Docs API)
 Layer 4: API Routes   — src/app/api/           (HTTP endpoints, server actions)
 Layer 5: UI Components— src/components/        (React components)
@@ -71,7 +71,7 @@ GoogleDocs   — Links between outline elements and Google Docs
 
 ## Key Architectural Decisions
 
-### Why Supabase over Vercel Postgres alone?
+### Why Neon over Vercel Postgres alone?
 - Free tier: 500MB storage, 50K monthly active users
 - Built-in Google OAuth (no NextAuth complexity)
 - Row-level security for multi-tenant data isolation
@@ -79,7 +79,7 @@ GoogleDocs   — Links between outline elements and Google Docs
 
 ### Why App Router with Server Components?
 - Reduces client-side JavaScript bundle
-- Server components can query Supabase directly
+- Server components can query Neon directly
 - Server Actions for mutations without API boilerplate
 - Streaming and Suspense for perceived performance
 
@@ -91,7 +91,7 @@ GoogleDocs   — Links between outline elements and Google Docs
 
 ### Offline / Local-first?
 - Not in scope. Online-only for v1.
-- Supabase + Vercel gives us sufficient reliability.
+- Neon + Vercel gives us sufficient reliability.
 - Can revisit with service workers + IndexedDB later.
 
 ## Data Flow: The Google Docs Round-Trip
@@ -163,7 +163,7 @@ plotamour/
 │   └── styles/
 │       └── globals.css
 ├── public/
-├── supabase/
+├── neon/
 │   └── migrations/                # SQL migrations
 ├── tests/
 │   └── e2e/

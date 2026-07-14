@@ -24,10 +24,10 @@ export interface ExportData {
  * Gather all data needed to export a book's outline.
  */
 export async function getExportData(bookId: string): Promise<ExportData> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Fetch book info
-  const { data: book, error: bookErr } = await supabase
+  const { data: book, error: bookErr } = await db
     .from("books")
     .select("*, projects(*)")
     .eq("id", bookId)
@@ -40,29 +40,29 @@ export async function getExportData(bookId: string): Promise<ExportData> {
   // Fetch all related data in parallel
   const [chaptersRes, plotlinesRes, scenesRes, charsRes, placesRes] =
     await Promise.all([
-      supabase
+      db
         .from("chapters")
         .select("*")
         .eq("book_id", bookId)
         .order("sort_order", { ascending: true }),
-      supabase
+      db
         .from("plotlines")
         .select("*")
         .eq("book_id", bookId)
         .order("sort_order", { ascending: true }),
-      supabase
+      db
         .from("scenes")
         .select("*")
         .eq("book_id", bookId)
         .is("deleted_at", null)
         .order("position", { ascending: true }),
-      supabase
+      db
         .from("characters")
         .select("*")
         .eq("project_id", projectId)
         .is("deleted_at", null)
         .order("sort_order", { ascending: true }),
-      supabase
+      db
         .from("places")
         .select("*")
         .eq("project_id", projectId)
@@ -81,13 +81,13 @@ export async function getExportData(bookId: string): Promise<ExportData> {
 
   const [sceneCharsRes, scenePlacesRes] = await Promise.all([
     sceneIds.length > 0
-      ? supabase
+      ? db
           .from("scene_characters")
           .select("scene_id, character_id")
           .in("scene_id", sceneIds)
       : Promise.resolve({ data: [] }),
     sceneIds.length > 0
-      ? supabase
+      ? db
           .from("scene_places")
           .select("scene_id, place_id")
           .in("scene_id", sceneIds)
