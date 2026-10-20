@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { AiFeature } from "@/lib/services/ai";
+import type { AiFeature, AiProvider } from "@/lib/types/ai";
 
 interface UseAiOptions {
   bookId: string;
 }
 
 export function useAi({ bookId }: UseAiOptions) {
+  const [provider, setProvider] = useState<AiProvider>("google");
+  const [model, setModel] = useState("");
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function useAi({ bookId }: UseAiOptions) {
         const res = await fetch("/api/ai", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ feature, bookId, ...extra }),
+          body: JSON.stringify({ feature, bookId, ...extra, provider, model: model || undefined }),
         });
 
         const data = await res.json();
@@ -42,7 +44,7 @@ export function useAi({ bookId }: UseAiOptions) {
         setLoading(false);
       }
     },
-    [bookId],
+    [bookId, provider, model],
   );
 
   const clear = useCallback(() => {
@@ -50,5 +52,5 @@ export function useAi({ bookId }: UseAiOptions) {
     setError(null);
   }, []);
 
-  return { run, result, loading, error, clear };
+  return { run, result, loading, error, clear, provider, setProvider, model, setModel };
 }

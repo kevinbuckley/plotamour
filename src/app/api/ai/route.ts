@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/db/server";
-import { runAiFeature, type AiFeature, type StoryContext } from "@/lib/services/ai";
+import { currentUser } from "@/lib/services/current-user";
+import { checkLocalRequest } from "@/lib/services/chatgpt";
+import { z } from "zod";
+import { runAiFeature, type StoryContext } from "@/lib/services/ai";
 import { getTimelineData } from "@/lib/services/timeline";
 import { getCharacters } from "@/lib/services/characters";
 import { getBook } from "@/lib/services/books";
@@ -8,25 +10,40 @@ import { getBook } from "@/lib/services/books";
 export async function POST(request: Request) {
   try {
     // Auth check
-    const db = await createClient();
-    const { data: { user } } = await db.auth.getUser();
+    const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { feature, bookId, sceneId, characterId } = body as {
-      feature: AiFeature;
-      bookId: string;
-      sceneId?: string;
-      characterId?: string;
-    };
-
-    if (!feature || !bookId) {
+    const parsed = z
+      .object({
+        feature: z.enum([
+          "what-if",
+          "scene-ideas",
+          "character-voice",
+          "pacing-check",
+        ]),
+        bookId: z.string().uuid(),
+        sceneId: z.string().uuid().optional(),
+        characterId: z.string().uuid().optional(),
+        provider: z.enum(["google", "chatgpt"]),
+        model: z.string().min(1).max(200).optional(),
+      })
+      .safeParse(await request.json().catch(() => null));
+    if (!parsed.success)
       return NextResponse.json(
-        { error: "feature and bookId are required" },
+        { error: "Choose a provider, valid feature and book." },
         { status: 400 },
       );
+    const { feature, bookId, sceneId, characterId, provider, model } =
+      parsed.data;
+    if (provider === "chatgpt") {
+      checkLocalRequest(request, true);
+      if (feature !== "scene-ideas" || !model)
+        return NextResponse.json(
+          { error: "Select a ChatGPT model for Scene Ideas." },
+          { status: 400 },
+        );
     }
 
     // Gather story context
@@ -69,22 +86,59 @@ export async function POST(request: Request) {
       })),
     };
 
-    const result = await runAiFeature(feature, ctx, { sceneId, characterId });
+    if (
+      (sceneId && !ctx.scenes.some((s) => s.id === sceneId)) ||
+      (characterId && !ctx.characters.some((c) => c.id === characterId))
+    ) {
+      return NextResponse.json(
+        { error: "Story item not found in this book." },
+        { status: 404 },
+      );
+    }
+    const result = await runAiFeature(
+      feature,
+      ctx,
+      { sceneId, characterId },
+      { provider, userId: user.id, model },
+    );
 
-    return NextResponse.json({ result });
+    return NextResponse.json(
+      { result, provider },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
-    console.error("[AI API]", error);
+    // Never log provider errors: they can include credentials or story content.
 
-    const message = error instanceof Error ? error.message : "AI request failed";
+    const message =
+      error instanceof Error ? error.message : "AI request failed";
 
     // Surface API key issues clearly
-    if (message.includes("API key") || message.includes("401") || message.includes("403")) {
+    if (
+      message.includes("API key") ||
+      message.includes("401") ||
+      message.includes("403")
+    ) {
       return NextResponse.json(
-        { error: "Google AI Studio API key not configured. Add GOOGLE_GENERATIVE_AI_API_KEY to your environment." },
+        {
+          error:
+            "Google AI Studio API key not configured. Add GOOGLE_GENERATIVE_AI_API_KEY to your environment.",
+        },
         { status: 503 },
       );
     }
 
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      {
+        error:
+          message.startsWith("ChatGPT") ||
+          message.startsWith("Connect ChatGPT") ||
+          message.startsWith("Choose") ||
+          message.startsWith("OpenAI") ||
+          message.startsWith("Open the local")
+            ? message
+            : "AI request failed. Retry or check AI settings.",
+      },
+      { status: 503 },
+    );
   }
 }

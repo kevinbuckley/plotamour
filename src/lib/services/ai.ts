@@ -1,9 +1,13 @@
-// Layer 2: AI service — wraps Vercel AI SDK with Google provider
+// Layer 3: AI provider boundary and story prompts
+import { runChatGpt } from "@/lib/services/chatgpt";
+import type { AiFeature, AiProvider } from "@/lib/types/ai";
+export type { AiFeature } from "@/lib/types/ai";
+import { env } from "@/lib/config/env";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import type { Chapter, Character, Plotline, Scene } from "@/lib/types/database";
 
-const model = google("gemma-3-27b-it");
+const model = google(env.GOOGLE_GENERATIVE_AI_MODEL);
 
 /** Context assembled from the user's project data */
 export interface StoryContext {
@@ -45,12 +49,12 @@ function buildStoryContext(ctx: StoryContext): string {
   return lines.join("\n");
 }
 
-export type AiFeature = "what-if" | "scene-ideas" | "character-voice" | "pacing-check";
 
 export async function runAiFeature(
   feature: AiFeature,
   ctx: StoryContext,
   extra: { sceneId?: string; characterId?: string } = {},
+  connection: { provider: AiProvider; userId: string; model?: string } = { provider: "google", userId: "" },
 ): Promise<string> {
   const storyContext = buildStoryContext(ctx);
   let prompt: string;
@@ -129,6 +133,12 @@ Analyze the pacing of this story:
 Be specific — reference actual scene titles and chapters.`;
       break;
     }
+  }
+
+  if (connection.provider === "chatgpt") {
+    if (feature !== "scene-ideas") throw new Error("ChatGPT currently supports Scene Ideas only.");
+    if (!connection.model) throw new Error("Choose a ChatGPT model first.");
+    return runChatGpt(connection.userId, connection.model, prompt);
   }
 
   const result = await generateText({

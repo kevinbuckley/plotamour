@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { X, FileText, ExternalLink, Trash2, MapPin, Plus, Loader2, Sparkles, Archive } from "lucide-react";
 import { TagPicker } from "@/components/shared/tag-picker";
+import { AiProviderPicker } from "@/components/shared/ai-provider-picker";
 import { useAi } from "@/lib/hooks/use-ai";
 import ReactMarkdown from "react-markdown";
 import type { Scene, SceneGoogleDoc, Chapter, Plotline, Character, Place, Tag, StoryPromise, Theme } from "@/lib/types/database";
@@ -530,12 +531,13 @@ export function SceneDetailPanel({
               <span className="text-[10px] text-muted-foreground/60">~10 sec</span>
             </div>
             <div className="p-4 space-y-3">
+              <AiProviderPicker provider={ai.provider} model={ai.model} onProvider={value => { ai.setProvider(value); ai.clear(); }} onModel={ai.setModel} disabled={ai.loading} />
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   className="flex-1 gap-1.5 text-xs"
-                  disabled={ai.loading}
+                  disabled={ai.loading || ai.provider === "chatgpt"}
                   onClick={() => ai.run("what-if", { sceneId: scene.id })}
                 >
                   {ai.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
@@ -545,7 +547,7 @@ export function SceneDetailPanel({
                   variant="outline"
                   size="sm"
                   className="flex-1 gap-1.5 text-xs"
-                  disabled={ai.loading}
+                  disabled={ai.loading || (ai.provider === "chatgpt" && !ai.model)}
                   onClick={() => ai.run("scene-ideas", { sceneId: scene.id })}
                 >
                   {ai.loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}

@@ -67,3 +67,12 @@ For an open-source hobby project:
 2. Rotate any exposed tokens immediately
 3. Notify affected users if data was exposed
 4. Document the incident and add preventive measures
+
+## Optional local ChatGPT connection
+
+ChatGPT is an AI connection bound to the existing Google-authenticated account,
+with separate plan-usage consent. Local OAuth credentials stay in owner-only
+runtime files outside the repository and database. The integration validates
+PKCE, browser-bound state and OpenID identity; it does not create Plotamour
+sessions. Hosted access is disabled pending confirmed OpenAI approval. See
+[the local integration guide](./design-docs/chatgpt-plan-local.md).

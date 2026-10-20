@@ -70,6 +70,7 @@ export async function AppSidebar({
 
       {/* Navigation */}
       <nav className="flex-1 space-y-0.5 px-2 py-3">
+        <Link href="/settings/ai" className="block px-3 py-2 text-sm">AI settings</Link>
         <SidebarLink
           href="/projects"
           label="All Projects"
