@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createMockClient, mockQueryBuilder } from "../mocks/supabase";
+import { createMockClient, mockQueryBuilder } from "../mocks/db";
 
 let mockClient: ReturnType<typeof createMockClient>;
 

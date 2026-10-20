@@ -1,4 +1,4 @@
-// Reusable Supabase mock utilities for all service tests
+// Reusable Neon mock utilities for all service tests
 
 import { vi } from "vitest";
 
@@ -34,7 +34,7 @@ export function mockQueryBuilder(
     builder[method] = vi.fn().mockReturnValue(builder);
   }
 
-  // Make it thenable so `await supabase.from(...).select(...)` resolves
+  // Make it thenable so `await db.from(...).select(...)` resolves
   builder.then = (
     resolve: (value: typeof response) => void,
     reject?: (reason: unknown) => void
@@ -44,7 +44,7 @@ export function mockQueryBuilder(
 }
 
 /**
- * Creates a mock Supabase client with a `from()` method.
+ * Creates a mock Neon client with a `from()` method.
  * Use `client.from.mockReturnValueOnce(mockQueryBuilder(...))` to set up
  * sequential call responses.
  */

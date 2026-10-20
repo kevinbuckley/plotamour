@@ -5,8 +5,8 @@ import type { Book } from "@/lib/types/database";
 import { DEFAULT_CHAPTERS, DEFAULT_PLOTLINE, DEFAULT_PLOTLINE_COLOR } from "@/lib/config/constants";
 
 export async function getBooks(projectId: string): Promise<Book[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("books")
     .select("*")
     .eq("project_id", projectId)
@@ -18,8 +18,8 @@ export async function getBooks(projectId: string): Promise<Book[]> {
 }
 
 export async function getBook(id: string): Promise<Book | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("books")
     .select("*")
     .eq("id", id)
@@ -34,10 +34,10 @@ export async function createBook(
   projectId: string,
   input: { title: string; description?: string }
 ): Promise<Book> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Get max sort order
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("books")
     .select("sort_order")
     .eq("project_id", projectId)
@@ -47,7 +47,7 @@ export async function createBook(
 
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
-  const { data: book, error: bookError } = await supabase
+  const { data: book, error: bookError } = await db
     .from("books")
     .insert({
       project_id: projectId,
@@ -67,14 +67,14 @@ export async function createBook(
     sort_order: i,
   }));
 
-  const { error: chaptersError } = await supabase
+  const { error: chaptersError } = await db
     .from("chapters")
     .insert(chapterInserts);
 
   if (chaptersError) throw chaptersError;
 
   // Create default plotline
-  const { error: plotlineError } = await supabase
+  const { error: plotlineError } = await db
     .from("plotlines")
     .insert({
       book_id: book.id,
@@ -92,8 +92,8 @@ export async function updateBook(
   id: string,
   input: { title?: string; description?: string; sort_order?: number }
 ): Promise<Book> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("books")
     .update(input)
     .eq("id", id)
@@ -105,8 +105,8 @@ export async function updateBook(
 }
 
 export async function deleteBook(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("books")
     .delete()
     .eq("id", id);
@@ -119,19 +119,19 @@ export async function getBookStats(bookId: string): Promise<{
   sceneCount: number;
   wordCount: number;
 }> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   const [chaptersRes, scenesRes, docsRes] = await Promise.all([
-    supabase
+    db
       .from("chapters")
       .select("id", { count: "exact" })
       .eq("book_id", bookId),
-    supabase
+    db
       .from("scenes")
       .select("id", { count: "exact" })
       .eq("book_id", bookId)
       .is("deleted_at", null),
-    supabase
+    db
       .from("scene_google_docs")
       .select("word_count, scenes!inner(book_id)")
       .eq("scenes.book_id", bookId),

@@ -34,7 +34,7 @@
 ### Phase 1 (Minimal)
 - Vercel Analytics (built-in, free)
 - Console error logging
-- Supabase dashboard for DB monitoring
+- Neon dashboard for DB monitoring
 
 ### Future
 - Sentry for error tracking
@@ -43,6 +43,6 @@
 ## Uptime
 
 - Vercel provides automatic failover and edge caching
-- Supabase free tier: no SLA, but historically reliable
+- Neon free tier: no SLA, but historically reliable
 - Google Docs API: 99.9% SLA from Google
-- Our target: if Google and Supabase are up, we're up
+- Our target: if Google and Neon are up, we're up

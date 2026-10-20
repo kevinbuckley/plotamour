@@ -2,15 +2,15 @@
 
 ## Authentication
 
-- Google OAuth only, via Supabase Auth
+- Google OAuth only, via Neon Auth
 - No passwords stored
-- Session managed by Supabase (HTTP-only cookies)
+- Session managed by Neon (HTTP-only cookies)
 - Middleware enforces auth on all `/dashboard` and `/api` routes
 
 ## Authorization
 
 ### Row Level Security (RLS)
-Every table in Supabase has RLS enabled. Policies ensure:
+Every table in Neon has RLS enabled. Policies ensure:
 - Users can only read/write their own data
 - Child records (books, scenes, etc.) are accessible only if the user owns the parent project
 - No admin/superuser access in the application
@@ -42,9 +42,9 @@ We request the minimum scopes needed. We never access files we didn't create.
 
 ## API Security
 
-- All API routes require authenticated Supabase session
+- All API routes require authenticated Neon session
 - Input validation with Zod on all mutations
-- No raw SQL — all queries through Supabase client with parameterized queries
+- No raw SQL — all queries through Neon client with parameterized queries
 - CORS configured for the deployment domain only
 
 ## Content Security

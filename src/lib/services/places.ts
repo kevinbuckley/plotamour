@@ -5,8 +5,8 @@ import type { Place } from "@/lib/types/database";
 import type { SceneMention } from "@/lib/services/characters";
 
 export async function getPlaces(projectId: string): Promise<Place[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("places")
     .select("*")
     .eq("project_id", projectId)
@@ -18,8 +18,8 @@ export async function getPlaces(projectId: string): Promise<Place[]> {
 }
 
 export async function getPlace(id: string): Promise<Place | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("places")
     .select("*")
     .eq("id", id)
@@ -35,9 +35,9 @@ export async function createPlace(input: {
   name: string;
   description?: string;
 }): Promise<Place> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("places")
     .select("sort_order")
     .eq("project_id", input.projectId)
@@ -47,7 +47,7 @@ export async function createPlace(input: {
 
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("places")
     .insert({
       project_id: input.projectId,
@@ -72,8 +72,8 @@ export async function updatePlace(
     custom_attributes?: Record<string, unknown>;
   }
 ): Promise<Place> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("places")
     .update(input)
     .eq("id", id)
@@ -85,8 +85,8 @@ export async function updatePlace(
 }
 
 export async function deletePlace(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("places")
     .delete()
     .eq("id", id);
@@ -95,8 +95,8 @@ export async function deletePlace(id: string): Promise<void> {
 }
 
 export async function getPlaceSceneIds(placeId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scene_places")
     .select("scene_id")
     .eq("place_id", placeId);
@@ -106,8 +106,8 @@ export async function getPlaceSceneIds(placeId: string): Promise<string[]> {
 }
 
 export async function getScenePlaceIds(sceneId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scene_places")
     .select("place_id")
     .eq("scene_id", sceneId);
@@ -120,8 +120,8 @@ export async function linkPlaceToScene(
   sceneId: string,
   placeId: string
 ): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_places")
     .upsert({ scene_id: sceneId, place_id: placeId });
 
@@ -132,8 +132,8 @@ export async function unlinkPlaceFromScene(
   sceneId: string,
   placeId: string
 ): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_places")
     .delete()
     .eq("scene_id", sceneId)
@@ -143,9 +143,9 @@ export async function unlinkPlaceFromScene(
 }
 
 export async function getPlaceScenesDetailed(placeId: string): Promise<SceneMention[]> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("scene_places")
     .select("scene_id, scenes!inner(id, title, deleted_at, archived_at, chapter_id, chapters!inner(id, title, sort_order))")
     .eq("place_id", placeId)

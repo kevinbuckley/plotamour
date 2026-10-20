@@ -47,7 +47,7 @@ describe("POST /api/google-docs", () => {
       summary: "The story begins",
     };
 
-    function setupSupabaseMocks() {
+    function setupNeonMocks() {
       // Mock books query: .from("books").select("title").eq("id", ...).single()
       const bookChain = {
         select: vi.fn().mockReturnValue({
@@ -83,7 +83,7 @@ describe("POST /api/google-docs", () => {
 
     it("creates a Google Doc for a scene", async () => {
       vi.mocked(getScene).mockResolvedValue(mockScene as any);
-      setupSupabaseMocks();
+      setupNeonMocks();
 
       const mockDoc = {
         id: "doc-1",
@@ -127,7 +127,7 @@ describe("POST /api/google-docs", () => {
 
     it("returns 400 when createDocForScene returns null", async () => {
       vi.mocked(getScene).mockResolvedValue(mockScene as any);
-      setupSupabaseMocks();
+      setupNeonMocks();
       vi.mocked(createDocForScene).mockResolvedValue(null);
 
       const res = await POST(
@@ -185,7 +185,7 @@ describe("POST /api/google-docs", () => {
     it("passes undefined summary when scene has no summary", async () => {
       const sceneNoSummary = { ...mockScene, summary: "" };
       vi.mocked(getScene).mockResolvedValue(sceneNoSummary as any);
-      setupSupabaseMocks();
+      setupNeonMocks();
 
       vi.mocked(createDocForScene).mockResolvedValue({
         id: "doc-1",

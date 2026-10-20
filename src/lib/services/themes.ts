@@ -8,8 +8,8 @@ export interface ThemeWithCount extends Theme {
 }
 
 export async function getThemes(projectId: string): Promise<Theme[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("themes")
     .select("*")
     .eq("project_id", projectId)
@@ -22,8 +22,8 @@ export async function getThemes(projectId: string): Promise<Theme[]> {
 export async function getThemesWithCounts(
   projectId: string
 ): Promise<ThemeWithCount[]> {
-  const supabase = await createClient();
-  const { data: themes, error } = await supabase
+  const db = await createClient();
+  const { data: themes, error } = await db
     .from("themes")
     .select("*")
     .eq("project_id", projectId)
@@ -33,7 +33,7 @@ export async function getThemesWithCounts(
   if (!themes || themes.length === 0) return [];
 
   const themeIds = themes.map((t) => t.id);
-  const { data: links } = await supabase
+  const { data: links } = await db
     .from("scene_themes")
     .select("theme_id")
     .in("theme_id", themeIds);
@@ -55,8 +55,8 @@ export async function createTheme(
   color: string,
   description = ""
 ): Promise<Theme> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("themes")
     .insert({ project_id: projectId, name, color, description })
     .select("*")
@@ -70,8 +70,8 @@ export async function updateTheme(
   id: string,
   data: Partial<Pick<Theme, "name" | "color" | "description">>
 ): Promise<Theme> {
-  const supabase = await createClient();
-  const { data: updated, error } = await supabase
+  const db = await createClient();
+  const { data: updated, error } = await db
     .from("themes")
     .update(data)
     .eq("id", id)
@@ -83,14 +83,14 @@ export async function updateTheme(
 }
 
 export async function deleteTheme(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("themes").delete().eq("id", id);
+  const db = await createClient();
+  const { error } = await db.from("themes").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }
 
 export async function getSceneThemeIds(sceneId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("scene_themes")
     .select("theme_id")
     .eq("scene_id", sceneId);
@@ -101,8 +101,8 @@ export async function addThemeToScene(
   sceneId: string,
   themeId: string
 ): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_themes")
     .insert({ scene_id: sceneId, theme_id: themeId });
   if (error && error.code !== "23505") throw new Error(error.message);
@@ -112,8 +112,8 @@ export async function removeThemeFromScene(
   sceneId: string,
   themeId: string
 ): Promise<void> {
-  const supabase = await createClient();
-  await supabase
+  const db = await createClient();
+  await db
     .from("scene_themes")
     .delete()
     .eq("scene_id", sceneId)
@@ -134,9 +134,9 @@ export interface SceneForTheme {
 export async function getThemeScenes(
   themeId: string
 ): Promise<SceneForTheme[]> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: links } = await supabase
+  const { data: links } = await db
     .from("scene_themes")
     .select("scene_id")
     .eq("theme_id", themeId);
@@ -145,7 +145,7 @@ export async function getThemeScenes(
 
   const sceneIds = links.map((l) => l.scene_id);
 
-  const { data: scenes } = await supabase
+  const { data: scenes } = await db
     .from("scenes")
     .select("id, title, chapter_id, plotline_id")
     .in("id", sceneIds)
@@ -157,11 +157,11 @@ export async function getThemeScenes(
   const plotlineIds = [...new Set(scenes.map((s) => s.plotline_id))];
 
   const [chaptersRes, plotlinesRes] = await Promise.all([
-    supabase
+    db
       .from("chapters")
       .select("id, title, sort_order")
       .in("id", chapterIds),
-    supabase
+    db
       .from("plotlines")
       .select("id, title, color")
       .in("id", plotlineIds),

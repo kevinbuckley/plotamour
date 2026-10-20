@@ -4,8 +4,8 @@ import { createClient } from "@/lib/db/server";
 import type { Note } from "@/lib/types/database";
 
 export async function getNotes(projectId: string): Promise<Note[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("notes")
     .select("*")
     .eq("project_id", projectId)
@@ -17,8 +17,8 @@ export async function getNotes(projectId: string): Promise<Note[]> {
 }
 
 export async function getNote(id: string): Promise<Note | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("notes")
     .select("*")
     .eq("id", id)
@@ -34,9 +34,9 @@ export async function createNote(input: {
   title?: string;
   category?: string;
 }): Promise<Note> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("notes")
     .select("sort_order")
     .eq("project_id", input.projectId)
@@ -46,7 +46,7 @@ export async function createNote(input: {
 
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("notes")
     .insert({
       project_id: input.projectId,
@@ -69,8 +69,8 @@ export async function updateNote(
     category?: string;
   }
 ): Promise<Note> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("notes")
     .update(input)
     .eq("id", id)
@@ -82,8 +82,8 @@ export async function updateNote(
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("notes")
     .delete()
     .eq("id", id);
@@ -92,8 +92,8 @@ export async function deleteNote(id: string): Promise<void> {
 }
 
 export async function getNoteCategories(projectId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("notes")
     .select("category")
     .eq("project_id", projectId)

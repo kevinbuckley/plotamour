@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockQueryBuilder } from "../mocks/supabase";
+import { mockQueryBuilder } from "../mocks/db";
 
 const { mockClient } = vi.hoisted(() => {
   return {

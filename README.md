@@ -65,9 +65,9 @@ Migrating from Plottr? Upload your `.pltr` file and plotamour imports everything
 | **Framework** | [Next.js 15](https://nextjs.org/) (App Router, Turbopack) |
 | **Language** | [TypeScript](https://www.typescriptlang.org/) |
 | **UI** | [React 19](https://react.dev/), [Radix UI](https://www.radix-ui.com/), [Tailwind CSS 4](https://tailwindcss.com/) |
-| **Database** | [Supabase](https://supabase.com/) (PostgreSQL + Auth + Row-Level Security) |
+| **Database** | [Neon](https://neon.com/) (PostgreSQL + Auth + Row-Level Security) |
 | **Drag & Drop** | [@dnd-kit](https://dndkit.com/) |
-| **Auth** | Google OAuth via Supabase |
+| **Auth** | Google OAuth via Neon |
 | **APIs** | Google Docs API, Google Drive API |
 | **Hosting** | [Vercel](https://vercel.com/) |
 | **Testing** | [Vitest](https://vitest.dev/), [Testing Library](https://testing-library.com/) |
@@ -80,7 +80,7 @@ Migrating from Plottr? Upload your `.pltr` file and plotamour imports everything
 ### Prerequisites
 
 - Node.js 20+
-- A [Supabase](https://supabase.com/) project
+- A [Neon](https://neon.com/) project
 - A [Google Cloud](https://console.cloud.google.com/) project with OAuth credentials
 
 ### 1. Clone & Install
@@ -91,12 +91,12 @@ cd plotamour
 npm install
 ```
 
-### 2. Set Up Supabase
+### 2. Set Up Neon
 
-1. Create a new project at [supabase.com](https://supabase.com/)
+1. Create a new project at [neon.com](https://neon.com/)
 2. Run the migration in the SQL Editor:
-   - Copy the contents of `supabase/migrations/00001_initial_schema.sql`
-   - Paste and run in Supabase SQL Editor
+   - Copy the contents of `neon/migrations/0001_init.sql`
+   - Paste and run in Neon SQL Editor
 3. Enable **Google** as an auth provider:
    - Go to **Authentication → Providers → Google**
    - Add your Google OAuth credentials (Client ID & Secret)
@@ -108,7 +108,7 @@ npm install
 2. Enable the **Google Docs API** and **Google Drive API**
 3. Create **OAuth 2.0 credentials** (Web application type)
 4. Add `http://localhost:3000` as an authorized JavaScript origin
-5. Add your Supabase callback URL as an authorized redirect URI
+5. Add your Neon Auth callback URL as an authorized redirect URI
 
 ### 4. Configure Environment
 
@@ -119,8 +119,10 @@ cp .env.local.example .env.local
 Fill in your values:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEON_AUTH_BASE_URL=https://your-project.neonauth.example/neondb/auth
+NEON_AUTH_COOKIE_SECRET=your-32-byte-cookie-secret
+NEXT_PUBLIC_NEON_DATA_API_URL=https://your-project.apirest.example/neondb/rest/v1
+DATABASE_URL=postgresql://user:password@host/neondb?sslmode=require
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
@@ -157,7 +159,7 @@ src/
 │   └── ui/                 # Radix UI primitives (button, card, dialog, etc.)
 ├── lib/
 │   ├── services/           # Business logic (scenes, characters, Google Docs, etc.)
-│   ├── db/                 # Supabase clients (server & browser)
+│   ├── db/                 # Neon clients (server & browser)
 │   ├── types/              # TypeScript types
 │   └── config/             # Constants & color palettes
 ├── __tests__/              # Test suite (320 tests across 20 files)
@@ -187,7 +189,7 @@ CI runs automatically on every push and pull request via GitHub Actions.
 
 ## Database
 
-plotamour uses Supabase (PostgreSQL) with **Row-Level Security** — every table is locked down so users can only see and modify their own data.
+plotamour uses Neon (PostgreSQL) with **Row-Level Security** — every table is locked down so users can only see and modify their own data.
 
 **Core tables:** `projects` → `books` → `chapters` → `scenes`
 
@@ -197,7 +199,7 @@ plotamour uses Supabase (PostgreSQL) with **Row-Level Security** — every table
 
 **Google Docs:** `scene_google_docs` tracks document IDs, URLs, word counts, and writing status per scene
 
-Full schema: [`supabase/migrations/00001_initial_schema.sql`](supabase/migrations/00001_initial_schema.sql)
+Full schema: [`neon/migrations/0001_init.sql`](neon/migrations/0001_init.sql)
 
 ---
 

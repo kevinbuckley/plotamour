@@ -4,8 +4,8 @@ import { createClient } from "@/lib/db/server";
 import type { Tag } from "@/lib/types/database";
 
 export async function getTags(projectId: string): Promise<Tag[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("tags")
     .select("*")
     .eq("project_id", projectId)
@@ -22,8 +22,8 @@ export async function createTag(input: {
   color?: string;
   category?: string;
 }): Promise<Tag> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("tags")
     .insert({
       project_id: input.projectId,
@@ -42,8 +42,8 @@ export async function updateTag(
   id: string,
   input: { name?: string; color?: string; category?: string }
 ): Promise<Tag> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("tags")
     .update(input)
     .eq("id", id)
@@ -55,15 +55,15 @@ export async function updateTag(
 }
 
 export async function deleteTag(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("tags").delete().eq("id", id);
+  const db = await createClient();
+  const { error } = await db.from("tags").delete().eq("id", id);
   if (error) throw error;
 }
 
 // Scene tags
 export async function getSceneTagIds(sceneId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scene_tags")
     .select("tag_id")
     .eq("scene_id", sceneId);
@@ -73,8 +73,8 @@ export async function getSceneTagIds(sceneId: string): Promise<string[]> {
 }
 
 export async function addTagToScene(sceneId: string, tagId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_tags")
     .upsert({ scene_id: sceneId, tag_id: tagId });
 
@@ -82,8 +82,8 @@ export async function addTagToScene(sceneId: string, tagId: string): Promise<voi
 }
 
 export async function removeTagFromScene(sceneId: string, tagId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_tags")
     .delete()
     .eq("scene_id", sceneId)
@@ -94,8 +94,8 @@ export async function removeTagFromScene(sceneId: string, tagId: string): Promis
 
 // Character tags
 export async function getCharacterTagIds(characterId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("character_tags")
     .select("tag_id")
     .eq("character_id", characterId);
@@ -105,8 +105,8 @@ export async function getCharacterTagIds(characterId: string): Promise<string[]>
 }
 
 export async function addTagToCharacter(characterId: string, tagId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("character_tags")
     .upsert({ character_id: characterId, tag_id: tagId });
 
@@ -114,8 +114,8 @@ export async function addTagToCharacter(characterId: string, tagId: string): Pro
 }
 
 export async function removeTagFromCharacter(characterId: string, tagId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("character_tags")
     .delete()
     .eq("character_id", characterId)
@@ -126,8 +126,8 @@ export async function removeTagFromCharacter(characterId: string, tagId: string)
 
 // Place tags
 export async function getPlaceTagIds(placeId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("place_tags")
     .select("tag_id")
     .eq("place_id", placeId);
@@ -137,8 +137,8 @@ export async function getPlaceTagIds(placeId: string): Promise<string[]> {
 }
 
 export async function addTagToPlace(placeId: string, tagId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("place_tags")
     .upsert({ place_id: placeId, tag_id: tagId });
 
@@ -146,8 +146,8 @@ export async function addTagToPlace(placeId: string, tagId: string): Promise<voi
 }
 
 export async function removeTagFromPlace(placeId: string, tagId: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("place_tags")
     .delete()
     .eq("place_id", placeId)

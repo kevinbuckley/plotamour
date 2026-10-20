@@ -191,14 +191,14 @@ export function previewPlottrFile(data: PlottrFile): PlottrPreview {
 // --- Import (writes to DB) ---
 
 export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: string }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   const projectTitle = getProjectTitle(data);
 
   // 1. Create project
-  const { data: project, error: projectError } = await supabase
+  const { data: project, error: projectError } = await db
     .from("projects")
     .insert({
       user_id: user.id,
@@ -223,7 +223,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
 
   // 2. Create book
   const bookTitle = data.books?.[String(firstBookId)]?.title ?? projectTitle;
-  const { data: book, error: bookError } = await supabase
+  const { data: book, error: bookError } = await db
     .from("books")
     .insert({
       project_id: project.id,
@@ -247,7 +247,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       sort_order: i,
     }));
 
-    const { data: chapters, error: chaptersError } = await supabase
+    const { data: chapters, error: chaptersError } = await db
       .from("chapters")
       .insert(chapterInserts)
       .select();
@@ -260,7 +260,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
     });
   } else {
     // Create a single default chapter
-    const { data: defaultChapter, error } = await supabase
+    const { data: defaultChapter, error } = await db
       .from("chapters")
       .insert({ book_id: book.id, title: "Chapter 1", sort_order: 0 })
       .select()
@@ -284,7 +284,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
         sort_order: i,
       }));
 
-    const { data: plotlines, error: plotlinesError } = await supabase
+    const { data: plotlines, error: plotlinesError } = await db
       .from("plotlines")
       .insert(plotlineInserts)
       .select();
@@ -298,7 +298,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
     });
   } else {
     // Create default plotline
-    const { data: defaultPlotline, error } = await supabase
+    const { data: defaultPlotline, error } = await db
       .from("plotlines")
       .insert({ book_id: book.id, title: "Main Plot", color: "#6cace4", sort_order: 0 })
       .select()
@@ -318,7 +318,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       sort_order: i,
     }));
 
-    const { data: characters, error: charError } = await supabase
+    const { data: characters, error: charError } = await db
       .from("characters")
       .insert(charInserts)
       .select();
@@ -341,7 +341,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       sort_order: i,
     }));
 
-    const { data: places, error: placeError } = await supabase
+    const { data: places, error: placeError } = await db
       .from("places")
       .insert(placeInserts)
       .select();
@@ -364,7 +364,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       sort_order: i,
     }));
 
-    await supabase.from("notes").insert(noteInserts);
+    await db.from("notes").insert(noteInserts);
   }
 
   // 8. Create tags
@@ -377,7 +377,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       category: t.type || "general",
     }));
 
-    const { data: tags, error: tagError } = await supabase
+    const { data: tags, error: tagError } = await db
       .from("tags")
       .insert(tagInserts)
       .select();
@@ -416,7 +416,7 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       };
     });
 
-    const { data: scenes, error: sceneError } = await supabase
+    const { data: scenes, error: sceneError } = await db
       .from("scenes")
       .insert(sceneInserts)
       .select();
@@ -450,10 +450,10 @@ export async function importPlottrFile(data: PlottrFile): Promise<{ projectId: s
       });
 
       if (sceneCharLinks.length > 0) {
-        await supabase.from("scene_characters").upsert(sceneCharLinks);
+        await db.from("scene_characters").upsert(sceneCharLinks);
       }
       if (scenePlaceLinks.length > 0) {
-        await supabase.from("scene_places").upsert(scenePlaceLinks);
+        await db.from("scene_places").upsert(scenePlaceLinks);
       }
     }
   }

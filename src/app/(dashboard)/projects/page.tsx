@@ -15,10 +15,10 @@ function getProjectHue(id: string): number {
 }
 
 export default async function ProjectsPage() {
-  const supabase = await createClient();
-  const { data: user } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: user } = await db.auth.getUser();
 
-  const { data: projects } = await supabase
+  const { data: projects } = await db
     .from("projects")
     .select("*")
     .is("deleted_at", null)

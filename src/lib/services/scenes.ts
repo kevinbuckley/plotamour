@@ -9,10 +9,10 @@ export async function createScene(input: {
   plotlineId: string;
   title?: string;
 }): Promise<Scene> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Get the max position in this cell
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("scenes")
     .select("position")
     .eq("chapter_id", input.chapterId)
@@ -23,7 +23,7 @@ export async function createScene(input: {
 
   const nextPosition = (existing?.[0]?.position ?? -1) + 1;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("scenes")
     .insert({
       book_id: input.bookId,
@@ -40,8 +40,8 @@ export async function createScene(input: {
 }
 
 export async function getScene(id: string): Promise<Scene | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scenes")
     .select("*")
     .eq("id", id)
@@ -64,8 +64,8 @@ export async function updateScene(
     position?: number;
   }
 ): Promise<Scene> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scenes")
     .update(input)
     .eq("id", id)
@@ -77,8 +77,8 @@ export async function updateScene(
 }
 
 export async function deleteScene(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scenes")
     .delete()
     .eq("id", id);
@@ -87,8 +87,8 @@ export async function deleteScene(id: string): Promise<void> {
 }
 
 export async function archiveScene(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scenes")
     .update({ archived_at: new Date().toISOString() })
     .eq("id", id);
@@ -97,8 +97,8 @@ export async function archiveScene(id: string): Promise<void> {
 }
 
 export async function unarchiveScene(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scenes")
     .update({ archived_at: null })
     .eq("id", id);
@@ -107,8 +107,8 @@ export async function unarchiveScene(id: string): Promise<void> {
 }
 
 export async function getArchivedScenes(bookId: string): Promise<Scene[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scenes")
     .select("*")
     .eq("book_id", bookId)
@@ -126,10 +126,10 @@ export async function moveScene(
   newPlotlineId: string,
   newPosition: number
 ): Promise<void> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Validate that the target chapter and plotline belong to the same book as the scene
-  const { data: scene } = await supabase
+  const { data: scene } = await db
     .from("scenes")
     .select("book_id")
     .eq("id", sceneId)
@@ -138,8 +138,8 @@ export async function moveScene(
   if (!scene) throw new Error("Scene not found");
 
   const [chapterRes, plotlineRes] = await Promise.all([
-    supabase.from("chapters").select("book_id").eq("id", newChapterId).single(),
-    supabase.from("plotlines").select("book_id").eq("id", newPlotlineId).single(),
+    db.from("chapters").select("book_id").eq("id", newChapterId).single(),
+    db.from("plotlines").select("book_id").eq("id", newPlotlineId).single(),
   ]);
 
   if (!chapterRes.data || chapterRes.data.book_id !== scene.book_id) {
@@ -149,7 +149,7 @@ export async function moveScene(
     throw new Error("Target plotline does not belong to the same book");
   }
 
-  const { error } = await supabase
+  const { error } = await db
     .from("scenes")
     .update({
       chapter_id: newChapterId,

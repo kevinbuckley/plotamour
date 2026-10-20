@@ -27,12 +27,12 @@ export async function applyTemplateDefinition(
   bookId: string,
   template: TemplateDefinition
 ): Promise<{ chapters: Chapter[]; plotlines: Plotline[] }> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Delete existing scenes, chapters, and plotlines for this book
-  await supabase.from("scenes").delete().eq("book_id", bookId);
-  await supabase.from("chapters").delete().eq("book_id", bookId);
-  await supabase.from("plotlines").delete().eq("book_id", bookId);
+  await db.from("scenes").delete().eq("book_id", bookId);
+  await db.from("chapters").delete().eq("book_id", bookId);
+  await db.from("plotlines").delete().eq("book_id", bookId);
 
   // Create plotlines from template
   const plotlineInserts = template.plotlines.map((p, i) => ({
@@ -42,7 +42,7 @@ export async function applyTemplateDefinition(
     sort_order: i,
   }));
 
-  const { data: plotlines, error: plotlineError } = await supabase
+  const { data: plotlines, error: plotlineError } = await db
     .from("plotlines")
     .insert(plotlineInserts)
     .select();
@@ -57,7 +57,7 @@ export async function applyTemplateDefinition(
     sort_order: i,
   }));
 
-  const { data: chapters, error: chapterError } = await supabase
+  const { data: chapters, error: chapterError } = await db
     .from("chapters")
     .insert(chapterInserts)
     .select();
@@ -77,7 +77,7 @@ export async function applyTemplateDefinition(
       position: 0,
     }));
 
-    const { error: sceneError } = await supabase
+    const { error: sceneError } = await db
       .from("scenes")
       .insert(sceneInserts);
 
@@ -94,16 +94,16 @@ export async function saveBookAsTemplate(
   bookId: string,
   name: string
 ): Promise<TemplateDefinition> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Fetch current book structure
   const [chaptersRes, plotlinesRes] = await Promise.all([
-    supabase
+    db
       .from("chapters")
       .select("*")
       .eq("book_id", bookId)
       .order("sort_order", { ascending: true }),
-    supabase
+    db
       .from("plotlines")
       .select("*")
       .eq("book_id", bookId)

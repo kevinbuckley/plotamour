@@ -31,10 +31,10 @@ async function getGoogleTokens(userId: string): Promise<GoogleTokens | null> {
     // Fall through to the legacy profiles-based refresh token below.
   }
 
-  // Legacy fallback: refresh token stored in profiles (migrated from Supabase,
-  // issued to the same Google OAuth client so it still refreshes fine).
-  const supabase = await createClient();
-  const { data: profile } = await supabase
+  // Legacy fallback: refresh token stored in profiles, issued to the same
+  // Google OAuth client so it still refreshes fine.
+  const db = await createClient();
+  const { data: profile } = await db
     .from("profiles")
     .select("google_refresh_token")
     .eq("id", userId)
@@ -90,8 +90,8 @@ export async function createDocForScene(input: {
   characters?: string[];
   placeName?: string;
 }): Promise<SceneGoogleDoc | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) {
     console.error("[GoogleDocs] No authenticated user");
     return null;
@@ -173,7 +173,7 @@ export async function createDocForScene(input: {
     const docUrl = `https://docs.google.com/document/d/${docId}/edit`;
 
     // Save the link in our database
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from("scene_google_docs")
       .insert({
         scene_id: input.sceneId,
@@ -194,8 +194,8 @@ export async function createDocForScene(input: {
 }
 
 export async function getDocForScene(sceneId: string): Promise<SceneGoogleDoc | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("scene_google_docs")
     .select("*")
     .eq("scene_id", sceneId)
@@ -205,8 +205,8 @@ export async function getDocForScene(sceneId: string): Promise<SceneGoogleDoc | 
 }
 
 export async function syncDocMetadata(sceneId: string): Promise<SceneGoogleDoc | null> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) return null;
 
   const doc = await getDocForScene(sceneId);
@@ -243,7 +243,7 @@ export async function syncDocMetadata(sceneId: string): Promise<SceneGoogleDoc |
 
     const writingStatus = wordCount === 0 ? "not_started" : "in_progress";
 
-    const { data: updated } = await supabase
+    const { data: updated } = await db
       .from("scene_google_docs")
       .update({
         word_count: wordCount,
@@ -262,9 +262,9 @@ export async function syncDocMetadata(sceneId: string): Promise<SceneGoogleDoc |
 }
 
 export async function syncProjectDocs(bookId: string): Promise<void> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: scenes } = await supabase
+  const { data: scenes } = await db
     .from("scenes")
     .select("id")
     .eq("book_id", bookId)
@@ -272,7 +272,7 @@ export async function syncProjectDocs(bookId: string): Promise<void> {
 
   if (!scenes) return;
 
-  const { data: docs } = await supabase
+  const { data: docs } = await db
     .from("scene_google_docs")
     .select("scene_id")
     .in("scene_id", scenes.map((s) => s.id));
@@ -288,8 +288,8 @@ export async function updateDocTitle(
   sceneId: string,
   newTitle: string
 ): Promise<void> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) return;
 
   const doc = await getDocForScene(sceneId);

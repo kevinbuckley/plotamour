@@ -1,12 +1,12 @@
--- plotamour — consolidated Neon schema (migrated from Supabase)
+-- plotamour — consolidated Neon schema
 --
--- This is the final end-state of supabase/migrations/00001–00009, adapted for Neon:
---   • auth.uid() is provided by Neon Auth (returns uuid, same as Supabase) — policies unchanged
+-- This migration defines the current production schema for Neon:
+--   • auth.uid() is provided by Neon Auth and returns the signed-in user's uuid.
 --   • user_id columns are plain UUIDs, NOT foreign keys into neon_auth."user":
 --     that schema is managed by Neon Auth (Better Auth) and we don't want DDL
 --     dependencies on it. App-level integrity: users are created by Neon Auth,
 --     profiles rows are upserted by the app on first sign-in.
---   • No handle_new_user trigger (was on Supabase's auth.users) — replaced by an
+--   • No handle_new_user trigger — replaced by an
 --     app-side profile upsert in the auth callback.
 --   • share_token is generated in app code (base64url via Node crypto); the DB
 --     default here is only a safety net using base64+translate because Postgres

@@ -5,8 +5,8 @@ import type { Project, ProjectType } from "@/lib/types/database";
 import { DEFAULT_CHAPTERS, DEFAULT_PLOTLINE, DEFAULT_PLOTLINE_COLOR } from "@/lib/config/constants";
 
 export async function getProjects(): Promise<Project[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("projects")
     .select("*")
     .is("deleted_at", null)
@@ -17,8 +17,8 @@ export async function getProjects(): Promise<Project[]> {
 }
 
 export async function getProject(id: string): Promise<Project | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("projects")
     .select("*")
     .eq("id", id)
@@ -34,12 +34,12 @@ export async function createProject(input: {
   description?: string;
   projectType?: ProjectType;
 }): Promise<{ project: Project; bookId: string }> {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
   // Create project
-  const { data: project, error: projectError } = await supabase
+  const { data: project, error: projectError } = await db
     .from("projects")
     .insert({
       user_id: user.id,
@@ -53,7 +53,7 @@ export async function createProject(input: {
   if (projectError) throw projectError;
 
   // Create default book
-  const { data: book, error: bookError } = await supabase
+  const { data: book, error: bookError } = await db
     .from("books")
     .insert({
       project_id: project.id,
@@ -72,14 +72,14 @@ export async function createProject(input: {
     sort_order: i,
   }));
 
-  const { error: chaptersError } = await supabase
+  const { error: chaptersError } = await db
     .from("chapters")
     .insert(chapterInserts);
 
   if (chaptersError) throw chaptersError;
 
   // Create default plotline
-  const { error: plotlineError } = await supabase
+  const { error: plotlineError } = await db
     .from("plotlines")
     .insert({
       book_id: book.id,
@@ -97,8 +97,8 @@ export async function updateProject(
   id: string,
   input: { title?: string; description?: string; cover_image_url?: string | null }
 ): Promise<Project> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("projects")
     .update(input)
     .eq("id", id)
@@ -110,8 +110,8 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("projects")
     .delete()
     .eq("id", id);
@@ -120,8 +120,8 @@ export async function deleteProject(id: string): Promise<void> {
 }
 
 export async function getFirstBookId(projectId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("books")
     .select("id")
     .eq("project_id", projectId)

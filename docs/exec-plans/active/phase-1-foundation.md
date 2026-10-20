@@ -19,14 +19,14 @@
 ### 1. Project Setup
 - [ ] Initialize Next.js 15 with App Router and TypeScript
 - [ ] Configure Tailwind CSS + shadcn/ui
-- [ ] Set up Supabase project (database + auth)
-- [ ] Configure Google OAuth in Supabase with Docs/Drive scopes
+- [ ] Set up Neon project (database + auth)
+- [ ] Configure Google OAuth in Neon with Docs/Drive scopes
 - [ ] Set up environment variables (.env.local)
 - [ ] Create base layout with sidebar navigation
 - [ ] Deploy initial skeleton to Vercel
 
 ### 2. Authentication
-- [ ] Implement Google sign-in flow via Supabase
+- [ ] Implement Google sign-in flow via Neon
 - [ ] Create /auth/callback route handler
 - [ ] Add middleware for route protection
 - [ ] Build landing page with sign-in CTA

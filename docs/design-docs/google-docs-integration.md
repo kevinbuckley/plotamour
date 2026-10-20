@@ -64,7 +64,7 @@ plotamour integrates with Google Docs so that:
   - `openid`, `email`, `profile` (for auth)
   - `https://www.googleapis.com/auth/documents` (Docs CRUD)
   - `https://www.googleapis.com/auth/drive.file` (only files we create)
-- Tokens stored in Supabase (encrypted `google_refresh_token` on user profile)
+- Tokens stored in Neon (encrypted `google_refresh_token` on user profile)
 - Token refresh handled server-side before API calls
 
 ### Database Schema Addition

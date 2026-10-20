@@ -1,7 +1,7 @@
 // Layer 2: Database — Neon Data API (PostgREST) server client
 //
 // createClient() keeps the same shape the services were written against with
-// supabase-js: `.from(table)...` for queries plus `.auth.getUser()`. Queries
+// db-js: `.from(table)...` for queries plus `.auth.getUser()`. Queries
 // go through the Neon Data API with the signed-in user's JWT, so RLS policies
 // (auth.uid()) scope every row. Anonymous requests (share pages) simply omit
 // the Authorization header and rely on the *_public_via_share policies.

@@ -11,8 +11,8 @@ function generateShareToken(): string {
 }
 
 export async function getShare(projectId: string): Promise<ProjectShare | null> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const db = await createClient();
+  const { data } = await db
     .from("project_shares")
     .select("*")
     .eq("project_id", projectId)
@@ -26,13 +26,13 @@ export async function createShare(
   projectId: string,
   label = ""
 ): Promise<ProjectShare> {
-  const supabase = await createClient();
+  const db = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await db.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("project_shares")
     .insert({
       project_id: projectId,
@@ -47,8 +47,8 @@ export async function createShare(
 }
 
 export async function deleteShare(shareId: string): Promise<void> {
-  const supabase = await createClient();
-  await supabase.from("project_shares").delete().eq("id", shareId);
+  const db = await createClient();
+  await db.from("project_shares").delete().eq("id", shareId);
 }
 
 /**

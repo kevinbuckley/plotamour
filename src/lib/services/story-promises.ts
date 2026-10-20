@@ -4,8 +4,8 @@ import { createClient } from "@/lib/db/server";
 import type { StoryPromise } from "@/lib/types/database";
 
 export async function getPromisesForBook(bookId: string): Promise<StoryPromise[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("story_promises")
     .select("*")
     .eq("book_id", bookId)
@@ -15,8 +15,8 @@ export async function getPromisesForBook(bookId: string): Promise<StoryPromise[]
 }
 
 export async function getPromisesForScene(sceneId: string): Promise<StoryPromise[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("story_promises")
     .select("*")
     .or(`plant_scene_id.eq.${sceneId},payoff_scene_id.eq.${sceneId}`)
@@ -30,8 +30,8 @@ export async function createPromise(input: {
   description: string;
   plantSceneId: string;
 }): Promise<StoryPromise> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("story_promises")
     .insert({
       book_id: input.bookId,
@@ -48,8 +48,8 @@ export async function updatePromise(
   id: string,
   input: { description?: string; payoff_scene_id?: string | null; resolved?: boolean }
 ): Promise<StoryPromise> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("story_promises")
     .update(input)
     .eq("id", id)
@@ -60,7 +60,7 @@ export async function updatePromise(
 }
 
 export async function deletePromise(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("story_promises").delete().eq("id", id);
+  const db = await createClient();
+  const { error } = await db.from("story_promises").delete().eq("id", id);
   if (error) throw error;
 }

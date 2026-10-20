@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockQueryBuilder } from "../mocks/supabase";
+import { mockQueryBuilder } from "../mocks/db";
 
 // vi.hoisted runs before vi.mock hoisting, making mockClient available in the factory.
 // We inline the mock client creation here since require() cannot resolve aliases.
@@ -100,7 +100,7 @@ describe("getProjects", () => {
     expect(result).toEqual([]);
   });
 
-  it("throws when supabase returns an error", async () => {
+  it("throws when db returns an error", async () => {
     const dbError = { message: "Connection failed", code: "PGRST000" };
     mockClient.from.mockReturnValueOnce(mockQueryBuilder(null, dbError));
 

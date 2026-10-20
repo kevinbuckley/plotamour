@@ -12,8 +12,8 @@ export interface SceneMention {
 }
 
 export async function getCharacters(projectId: string): Promise<Character[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("characters")
     .select("*")
     .eq("project_id", projectId)
@@ -25,8 +25,8 @@ export async function getCharacters(projectId: string): Promise<Character[]> {
 }
 
 export async function getCharacter(id: string): Promise<Character | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("characters")
     .select("*")
     .eq("id", id)
@@ -42,9 +42,9 @@ export async function createCharacter(input: {
   name: string;
   description?: string;
 }): Promise<Character> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data: existing } = await supabase
+  const { data: existing } = await db
     .from("characters")
     .select("sort_order")
     .eq("project_id", input.projectId)
@@ -54,7 +54,7 @@ export async function createCharacter(input: {
 
   const nextOrder = (existing?.[0]?.sort_order ?? -1) + 1;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("characters")
     .insert({
       project_id: input.projectId,
@@ -79,8 +79,8 @@ export async function updateCharacter(
     custom_attributes?: Record<string, unknown>;
   }
 ): Promise<Character> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("characters")
     .update(input)
     .eq("id", id)
@@ -92,8 +92,8 @@ export async function updateCharacter(
 }
 
 export async function deleteCharacter(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("characters")
     .delete()
     .eq("id", id);
@@ -102,8 +102,8 @@ export async function deleteCharacter(id: string): Promise<void> {
 }
 
 export async function getCharacterSceneIds(characterId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scene_characters")
     .select("scene_id")
     .eq("character_id", characterId);
@@ -113,8 +113,8 @@ export async function getCharacterSceneIds(characterId: string): Promise<string[
 }
 
 export async function getSceneCharacterIds(sceneId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("scene_characters")
     .select("character_id")
     .eq("scene_id", sceneId);
@@ -127,8 +127,8 @@ export async function linkCharacterToScene(
   sceneId: string,
   characterId: string
 ): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_characters")
     .upsert({ scene_id: sceneId, character_id: characterId });
 
@@ -139,8 +139,8 @@ export async function unlinkCharacterFromScene(
   sceneId: string,
   characterId: string
 ): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("scene_characters")
     .delete()
     .eq("scene_id", sceneId)
@@ -154,10 +154,10 @@ export async function getCharacterPresenceMatrix(bookId: string, projectId: stri
   sceneId: string;
   chapterId: string;
 }[]> {
-  const supabase = await createClient();
+  const db = await createClient();
 
   // Get all scene_characters for scenes in this book, joined with scene data
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("scene_characters")
     .select("character_id, scene_id, scenes!inner(chapter_id, book_id)")
     .eq("scenes.book_id", bookId);
@@ -176,9 +176,9 @@ export async function getCharacterPresenceMatrix(bookId: string, projectId: stri
 }
 
 export async function getCharacterScenesDetailed(characterId: string): Promise<SceneMention[]> {
-  const supabase = await createClient();
+  const db = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("scene_characters")
     .select("scene_id, scenes!inner(id, title, deleted_at, archived_at, chapter_id, chapters!inner(id, title, sort_order))")
     .eq("character_id", characterId)
@@ -209,8 +209,8 @@ export async function getCharacterScenesDetailed(characterId: string): Promise<S
 // ─── Character Relations ────────────────────────────────────────────────────
 
 export async function getCharacterRelations(characterId: string): Promise<CharacterRelation[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("character_relations")
     .select("*")
     .or(`from_character_id.eq.${characterId},to_character_id.eq.${characterId}`)
@@ -226,8 +226,8 @@ export async function addCharacterRelation(input: {
   relationType: string;
   description?: string;
 }): Promise<CharacterRelation> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("character_relations")
     .insert({
       from_character_id: input.fromCharacterId,
@@ -246,8 +246,8 @@ export async function updateCharacterRelation(
   id: string,
   input: { relation_type?: string; description?: string }
 ): Promise<CharacterRelation> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const db = await createClient();
+  const { data, error } = await db
     .from("character_relations")
     .update(input)
     .eq("id", id)
@@ -259,8 +259,8 @@ export async function updateCharacterRelation(
 }
 
 export async function deleteCharacterRelation(id: string): Promise<void> {
-  const supabase = await createClient();
-  const { error } = await supabase
+  const db = await createClient();
+  const { error } = await db
     .from("character_relations")
     .delete()
     .eq("id", id);
