@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { chatGptEnabled, chatGptOrigin } from "@/lib/config/chatgpt";
 import { auth } from "@/lib/auth/server";
 
 const publicRoutes = ["/", "/auth/login", "/auth/callback", "/privacy", "/termsofservice", "/api/dev-login"];
@@ -19,6 +20,10 @@ export async function middleware(request: NextRequest) {
     return sdkMiddleware(request);
   }
 
+  // The callback has its own one-use, browser-bound state check. A Strict
+  // Neon cookie may be absent on a cross-site return from OpenAI.
+  if (request.nextUrl.pathname === "/api/ai/chatgpt/callback" && chatGptEnabled() && request.headers.get("host") === new URL(chatGptOrigin()).host) return NextResponse.next();
+
   const hasSession = request.cookies.has(SESSION_COOKIE);
 
   const isPublicRoute =
@@ -26,7 +31,10 @@ export async function middleware(request: NextRequest) {
     publicPrefixes.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
   if (!hasSession && !isPublicRoute) {
-    const url = request.nextUrl.clone();
+    // Use a native URL: NextURL normalizes even hostname assignments to localhost.
+    const url = chatGptEnabled() && request.headers.get("host") === new URL(chatGptOrigin()).host
+      ? new URL(request.nextUrl.pathname + request.nextUrl.search, chatGptOrigin())
+      : request.nextUrl.clone();
     if (process.env.NODE_ENV === "development") {
       url.pathname = "/api/dev-login";
     } else {
