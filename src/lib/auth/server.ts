@@ -12,5 +12,8 @@ export const auth = createNeonAuth({
   baseUrl: env.NEON_AUTH_BASE_URL,
   cookies: {
     secret: env.NEON_AUTH_COOKIE_SECRET,
+    // The challenge must survive the top-level cross-site return from Google.
+    // Strict drops it on that request, preventing the verifier exchange.
+    sameSite: "lax",
   },
 });
