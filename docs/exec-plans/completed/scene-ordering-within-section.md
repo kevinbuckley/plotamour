@@ -95,3 +95,5 @@ Inspected main at `f0644a0`.
 - Production build, TypeScript checking, and whitespace checks passed. Lint reports existing repository warnings.
 - Additive migration applied to the configured Neon database; verified zero non-owner EXECUTE grants on the reorder function.
 - Synthetic desktop/mobile browser checks passed. Screenshots are local validation artifacts, not product fixtures.
+
+- CI initially exposed a missing React Testing Library peer dependency. Added `@testing-library/dom` explicitly; verified the application suite again after a clean `npm ci`.
