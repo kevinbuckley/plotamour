@@ -171,7 +171,8 @@ export async function compileManuscript(bookId: string): Promise<ManuscriptData>
       .select("*, scene_google_docs(*)")
       .eq("book_id", bookId)
       .is("deleted_at", null)
-      .order("position", { ascending: true }),
+      .order("position", { ascending: true })
+      .order("id", { ascending: true }),
   ]);
 
   const chapters: Chapter[] = chaptersRes.data ?? [];
@@ -194,7 +195,7 @@ export async function compileManuscript(bookId: string): Promise<ManuscriptData>
     const chapter = chapters[chapterIdx];
     const chapterScenes = scenes
       .filter((s) => s.chapter_id === chapter.id)
-      .sort((a, b) => a.position - b.position);
+      .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
 
     for (let sceneIdx = 0; sceneIdx < chapterScenes.length; sceneIdx++) {
       const scene = chapterScenes[sceneIdx];

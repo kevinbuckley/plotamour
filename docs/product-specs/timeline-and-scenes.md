@@ -74,8 +74,9 @@ Clicking a card opens a slide-in panel from the right:
 
 | Action | Behavior |
 |---|---|
-| Drag scene within same row | Reorder within plotline (change chapter) |
-| Drag scene to different row | Move to different plotline (same chapter) |
+| Drag scene within the same cell | Reorder before or after another scene in that chapter/plotline section |
+| Drag scene to another chapter in the same row | Move to that chapter and append to its plotline section |
+| Drag scene to different row | Append to the destination plotline section (same chapter) |
 | Drag scene to different row+column | Move to different plotline + chapter |
 | Drag chapter header | Reorder all scenes in that chapter |
 | Drag plotline header | Reorder plotline rows |
@@ -85,6 +86,16 @@ All drag operations:
 - Update optimistically (instant in UI)
 - Persist to database via server action
 - Are undoable (Ctrl+Z in Phase 4)
+
+### Ordering scenes within a section
+
+A section is one chapter/plotline cell. Scenes are ordered by their saved position, with scene ID as a deterministic tie-breaker for older duplicate positions.
+
+- Desktop cards support dragging within a cell, with a sortable preview and highlighted destination.
+- Desktop and mobile scenes have labeled Move up and Move down buttons. Boundaries are disabled; focus returns to an available move button after saving.
+- Reordering is optimistic and atomic. A stale order or changed membership is rejected; the UI reloads authoritative positions and shows an error. If it cannot reload, it asks the writer to refresh before retrying.
+- New, restored, and incoming scenes append to the destination. Moving out can leave harmless gaps in stored positions; the next reorder normalizes that cell.
+- Reordering preserves scene content, relationships, and Google Doc links. It does not define a new chapter-wide order across plotlines.
 
 ### Adding Elements
 

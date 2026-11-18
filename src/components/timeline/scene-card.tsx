@@ -3,7 +3,8 @@
 import { cn } from "@/lib/utils/cn";
 import type { Scene, SceneGoogleDoc, WritingStatus } from "@/lib/types/database";
 import { FileText, GripVertical } from "lucide-react";
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { SceneOrderControls } from "./scene-order-controls";
 import { CSS } from "@dnd-kit/utilities";
 
 type SceneWithDoc = Scene & { google_doc?: SceneGoogleDoc | null };
@@ -13,6 +14,7 @@ interface SceneCardProps {
   plotlineColor: string;
   hasPromises?: boolean;
   onClick: () => void;
+  orderControls: { first: boolean; last: boolean; pending: boolean; onMove: (direction: -1 | 1) => void };
 }
 
 const STATUS_CONFIG: Record<WritingStatus, { label: string; dot: string; pill: string }> = {
@@ -33,14 +35,15 @@ const STATUS_CONFIG: Record<WritingStatus, { label: string; dot: string; pill: s
   },
 };
 
-export function SceneCard({ scene, plotlineColor, hasPromises, onClick }: SceneCardProps) {
+export function SceneCard({ scene, plotlineColor, hasPromises, onClick, orderControls }: SceneCardProps) {
   const doc = scene.google_doc;
   const wordCount = doc?.word_count ?? 0;
   const status = doc?.writing_status ?? "not_started";
   const statusCfg = STATUS_CONFIG[status];
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
+    useSortable({
+      disabled: orderControls.pending,
       id: scene.id,
       data: {
         type: "scene",
@@ -49,7 +52,8 @@ export function SceneCard({ scene, plotlineColor, hasPromises, onClick }: SceneC
     });
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    transform: CSS.Transform.toString(transform),
+    transition,
     borderLeftColor: plotlineColor,
     borderLeftWidth: "4px",
     backgroundColor: `${plotlineColor}0d`,
@@ -61,12 +65,15 @@ export function SceneCard({ scene, plotlineColor, hasPromises, onClick }: SceneC
       style={style}
       className={cn(
         "group/card w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:border-border/80",
-        isDragging && "z-50 opacity-50 shadow-xl rotate-1"
+        isDragging && "z-50 opacity-50 shadow-xl rotate-1",
+        isOver && !isDragging && "ring-2 ring-primary"
       )}
     >
       <div className="flex items-start gap-1 p-2">
         {/* Drag handle */}
         <button
+          aria-label={`Drag ${scene.title} to reorder`}
+          disabled={orderControls.pending}
           {...attributes}
           {...listeners}
           className="mt-0.5 shrink-0 cursor-grab touch-none text-muted-foreground/40 opacity-0 transition-opacity active:cursor-grabbing group-hover/card:opacity-100"
@@ -104,6 +111,9 @@ export function SceneCard({ scene, plotlineColor, hasPromises, onClick }: SceneC
           )}
 
         </button>
+      </div>
+      <div className="flex justify-end px-1 pb-1">
+        <SceneOrderControls title={scene.title} {...orderControls} />
       </div>
     </div>
   );

@@ -29,7 +29,8 @@ export async function getTimelineData(bookId: string): Promise<TimelineData> {
       .eq("book_id", bookId)
       .is("deleted_at", null)
       .is("archived_at", null)
-      .order("position", { ascending: true }),
+      .order("position", { ascending: true })
+      .order("id", { ascending: true }),
   ]);
 
   if (chaptersRes.error) throw chaptersRes.error;

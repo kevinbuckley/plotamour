@@ -55,7 +55,8 @@ export async function getExportData(bookId: string): Promise<ExportData> {
         .select("*")
         .eq("book_id", bookId)
         .is("deleted_at", null)
-        .order("position", { ascending: true }),
+        .order("position", { ascending: true })
+        .order("id", { ascending: true }),
       supabase
         .from("characters")
         .select("*")

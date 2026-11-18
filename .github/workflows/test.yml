@@ -27,6 +27,12 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: Add PostgreSQL binaries to PATH
+        run: echo "$(pg_config --bindir)" >> "$GITHUB_PATH"
+
+      - name: Test atomic scene ordering against PostgreSQL
+        run: python3 scripts/test-scene-ordering.py
+
       - name: Run tests
         run: npm test
 

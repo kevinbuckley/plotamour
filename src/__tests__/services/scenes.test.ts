@@ -300,7 +300,7 @@ describe("moveScene", () => {
 
   it("updates chapter, plotline, and position", async () => {
     setupValidationQueries();
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null)); // update
+    mockClient.from.mockReturnValueOnce(mockQueryBuilder(mockScene)); // update
 
     await moveScene("scene-1", "ch-2", "pl-2", 5);
 
@@ -309,13 +309,13 @@ describe("moveScene", () => {
     expect(mockClient.from).toHaveBeenCalledWith("plotlines");
   });
 
-  it("resolves without returning a value", async () => {
+  it("returns the authoritative position from the database", async () => {
     setupValidationQueries();
-    mockClient.from.mockReturnValueOnce(mockQueryBuilder(null));
+    mockClient.from.mockReturnValueOnce(mockQueryBuilder({ ...mockScene, position: 7 }));
 
     await expect(
       moveScene("scene-1", "ch-2", "pl-2", 5)
-    ).resolves.toBeUndefined();
+    ).resolves.toMatchObject({ id: mockScene.id, position: 7 });
   });
 
   it("throws when the scene is not found", async () => {

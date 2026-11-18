@@ -206,3 +206,11 @@ export interface StoryPromise {
   created_at: string;
   updated_at: string;
 }
+
+export interface SceneOrderInput {
+  bookId: string;
+  chapterId: string;
+  plotlineId: string;
+  expectedIds: string[];
+  sceneIds: string[];
+}
