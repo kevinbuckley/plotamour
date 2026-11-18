@@ -25,6 +25,7 @@ interface SceneDetailPanelProps {
   onUpdate: (id: string, data: Partial<Scene>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onArchive: (id: string) => Promise<void>;
+  orderingPending?: boolean;
   onMove: (sceneId: string, chapterId: string, plotlineId: string) => Promise<void>;
   onClose: () => void;
   onTagCreated: (tag: Tag) => void;
@@ -60,6 +61,7 @@ export function SceneDetailPanel({
   onDelete,
   onArchive,
   onMove,
+  orderingPending = false,
   onClose,
   onTagCreated,
 }: SceneDetailPanelProps) {
@@ -577,6 +579,7 @@ export function SceneDetailPanel({
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Chapter</label>
               <select
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs transition-colors focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20"
+                disabled={orderingPending}
                 value={scene.chapter_id}
                 onChange={(e) => onMove(scene.id, e.target.value, scene.plotline_id)}
               >
@@ -589,6 +592,7 @@ export function SceneDetailPanel({
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Plotline</label>
               <select
                 className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-xs transition-colors focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20"
+                disabled={orderingPending}
                 value={scene.plotline_id}
                 onChange={(e) => onMove(scene.id, scene.chapter_id, e.target.value)}
               >
@@ -875,8 +879,9 @@ export function SceneDetailPanel({
             variant="ghost"
             size="sm"
             className="flex-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+            disabled={orderingPending}
             onClick={() => {
-              if (confirm("Archive this scene? You can restore it any time.")) onArchive(scene.id);
+              if (!orderingPending && confirm("Archive this scene? You can restore it any time.")) onArchive(scene.id);
             }}
           >
             <Archive className="mr-2 h-4 w-4" />
@@ -886,8 +891,9 @@ export function SceneDetailPanel({
             variant="ghost"
             size="sm"
             className="flex-1 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            disabled={orderingPending}
             onClick={() => {
-              if (confirm("Delete this scene? This cannot be undone.")) onDelete(scene.id);
+              if (!orderingPending && confirm("Delete this scene? This cannot be undone.")) onDelete(scene.id);
             }}
           >
             <Trash2 className="mr-2 h-4 w-4" />

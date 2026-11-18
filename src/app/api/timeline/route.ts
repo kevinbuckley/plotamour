@@ -1,3 +1,5 @@
+import { getTimelineData } from "@/lib/services/timeline";
+import { reorderScenes, SceneOrderError } from "@/lib/services/scene-order";
 import { addChapter, addPlotline, deleteChapter, deletePlotline, updateChapter, updatePlotline, reorderChapters, reorderPlotlines } from "@/lib/services/timeline";
 import { createScene, updateScene, deleteScene, moveScene, archiveScene, unarchiveScene, getArchivedScenes } from "@/lib/services/scenes";
 import { PLOTLINE_COLORS } from "@/lib/config/constants";
@@ -42,6 +44,12 @@ export async function POST(request: Request) {
         await reorderPlotlines(body.bookId, body.plotlineIds);
         return NextResponse.json({ ok: true });
       }
+      case "getSceneOrder": {
+        return NextResponse.json((await getTimelineData(body.bookId)).scenes);
+      }
+      case "reorderScenes": {
+        return NextResponse.json(await reorderScenes(body));
+      }
       case "addScene": {
         const scene = await createScene({
           bookId: body.bookId,
@@ -60,8 +68,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
       }
       case "moveScene": {
-        await moveScene(body.sceneId, body.chapterId, body.plotlineId, body.position ?? 0);
-        return NextResponse.json({ ok: true });
+        const scene = await moveScene(body.sceneId, body.chapterId, body.plotlineId, body.position ?? 0);
+        return NextResponse.json(scene);
       }
       case "archiveScene": {
         await archiveScene(body.id);
@@ -79,6 +87,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Unknown action" }, { status: 400 });
     }
   } catch (error) {
+    if (error instanceof SceneOrderError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
     console.error("Timeline API error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }

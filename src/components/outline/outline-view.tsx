@@ -42,7 +42,7 @@ export function OutlineView({ projectId, chapters, plotlines, scenes: initialSce
       .sort((a, b) => {
         const plotA = plotlines.findIndex((p) => p.id === a.plotline_id);
         const plotB = plotlines.findIndex((p) => p.id === b.plotline_id);
-        return plotA - plotB || a.position - b.position;
+        return plotA - plotB || a.position - b.position || a.id.localeCompare(b.id);
       });
 
   const handleCreateDoc = async (sceneId: string) => {

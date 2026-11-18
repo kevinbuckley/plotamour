@@ -18,6 +18,7 @@ export async function createScene(input: {
     .eq("chapter_id", input.chapterId)
     .eq("plotline_id", input.plotlineId)
     .is("deleted_at", null)
+    .is("archived_at", null)
     .order("position", { ascending: false })
     .limit(1);
 
@@ -125,7 +126,7 @@ export async function moveScene(
   newChapterId: string,
   newPlotlineId: string,
   newPosition: number
-): Promise<void> {
+): Promise<Scene> {
   const supabase = await createClient();
 
   // Validate that the target chapter and plotline belong to the same book as the scene
@@ -149,14 +150,18 @@ export async function moveScene(
     throw new Error("Target plotline does not belong to the same book");
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("scenes")
     .update({
       chapter_id: newChapterId,
       plotline_id: newPlotlineId,
       position: newPosition,
     })
-    .eq("id", sceneId);
+    .eq("id", sceneId)
+    .select()
+    .single();
 
   if (error) throw error;
+  if (!data) throw new Error("Scene not found");
+  return data;
 }

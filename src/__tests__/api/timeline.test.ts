@@ -1,4 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+vi.mock("@/lib/services/scene-order", () => ({
+  reorderScenes: vi.fn(),
+  SceneOrderError: class extends Error { constructor(message: string, public status: number) { super(message); } },
+}));
+
+import { reorderScenes, SceneOrderError } from "@/lib/services/scene-order";
 import { POST } from "@/app/api/timeline/route";
 
 // ---------------------------------------------------------------------------
@@ -6,6 +12,7 @@ import { POST } from "@/app/api/timeline/route";
 // ---------------------------------------------------------------------------
 
 vi.mock("@/lib/services/timeline", () => ({
+  getTimelineData: vi.fn(),
   addChapter: vi.fn(),
   updateChapter: vi.fn(),
   deleteChapter: vi.fn(),
@@ -73,6 +80,20 @@ describe("POST /api/timeline", () => {
   // -------------------------------------------------------------------------
   // addChapter
   // -------------------------------------------------------------------------
+
+  it("reorderScenes — returns authoritative scenes", async () => {
+    vi.mocked(reorderScenes).mockResolvedValue([]);
+    const res = await POST(makeRequest({ action: "reorderScenes" }));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([]);
+  });
+
+  it.each([400, 401, 403, 409])("reorderScenes — preserves error status %i", async (status) => {
+    vi.mocked(reorderScenes).mockRejectedValueOnce(new SceneOrderError("Rejected", status));
+    const res = await POST(makeRequest({ action: "reorderScenes" }));
+    expect(res.status).toBe(status);
+    expect(await res.json()).toEqual({ error: "Rejected" });
+  });
 
   it("addChapter — calls addChapter service and returns chapter", async () => {
     const chapter = { id: "ch-1", title: "Chapter 1", position: 0 };
@@ -199,14 +220,14 @@ describe("POST /api/timeline", () => {
   // -------------------------------------------------------------------------
 
   it("moveScene — calls moveScene with position defaulting to 0", async () => {
-    vi.mocked(moveScene).mockResolvedValue(undefined as any);
+    vi.mocked(moveScene).mockResolvedValue({ id: "scene-1", position: 2 } as any);
 
     const res = await POST(
       makeRequest({ action: "moveScene", sceneId: "sc-1", chapterId: "ch-2", plotlineId: "pl-2" }),
     );
 
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(await res.json()).toEqual({ id: "scene-1", position: 2 });
     expect(moveScene).toHaveBeenCalledWith("sc-1", "ch-2", "pl-2", 0);
   });
 

@@ -99,7 +99,7 @@ export function PacingHeartbeat({ chapters, plotlines, scenes }: PacingHeartbeat
       const chapter = chapters[chapterIdx];
       const chapterScenes = scenes
         .filter((s) => s.chapter_id === chapter.id)
-        .sort((a, b) => a.position - b.position);
+        .sort((a, b) => a.position - b.position || a.id.localeCompare(b.id));
 
       for (const scene of chapterScenes) {
         const plotline = plotlines.find((p) => p.id === scene.plotline_id);

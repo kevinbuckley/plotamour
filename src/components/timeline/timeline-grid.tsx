@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils/cn";
 import { PLOTLINE_COLORS } from "@/lib/config/constants";
 import type {
@@ -17,12 +17,18 @@ import type {
 import { SceneCard } from "./scene-card";
 import { SceneDetailPanel } from "./scene-detail-panel";
 import { DroppableCell } from "./droppable-cell";
+import { SceneOrderControls } from "./scene-order-controls";
+import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
 import { useRecentScenes } from "@/lib/hooks/use-recent-scenes";
 import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  KeyboardSensor,
+  pointerWithin,
+  closestCenter,
+  type CollisionDetection,
   useSensor,
   useSensors,
   type DragStartEvent,
@@ -50,7 +56,10 @@ async function timelineAction(body: Record<string, unknown>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error("API call failed");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error ?? "Could not save changes. Please try again.");
+  }
   return res.json();
 }
 
@@ -77,6 +86,10 @@ export function TimelineGrid({
   const [editingChapter, setEditingChapter] = useState<string | null>(null);
   const [editingPlotline, setEditingPlotline] = useState<string | null>(null);
   const [activeScene, setActiveScene] = useState<SceneWithDoc | null>(null);
+  const orderPending = useRef(false);
+  const [savingOrder, setSavingOrder] = useState(false);
+  const [orderMessage, setOrderMessage] = useState("");
+  const [orderError, setOrderError] = useState(false);
   const [promises, setPromises] = useState<StoryPromise[]>([]);
   const { trackScene } = useRecentScenes(projectId);
 
@@ -138,14 +151,15 @@ export function TimelineGrid({
       activationConstraint: {
         distance: 8,
       },
-    })
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const getScenesForCell = useCallback(
     (chapterId: string, plotlineId: string) =>
       scenes.filter(
         (s) => s.chapter_id === chapterId && s.plotline_id === plotlineId
-      ),
+      ).sort((a, b) => a.position - b.position || a.id.localeCompare(b.id)),
     [scenes]
   );
 
@@ -180,6 +194,7 @@ export function TimelineGrid({
   };
 
   const handleAddScene = async (chapterId: string, plotlineId: string) => {
+    if (orderPending.current) return;
     try {
       const scene = await timelineAction({
         action: "addScene",
@@ -197,7 +212,7 @@ export function TimelineGrid({
     try {
       const updated = await timelineAction({ action: "updateScene", id, data });
       setScenes((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
+        prev.map((s) => (s.id === id ? { ...s, ...updated, position: s.position, chapter_id: s.chapter_id, plotline_id: s.plotline_id } : s))
       );
       if (selectedScene?.id === id) {
         setSelectedScene((prev) => (prev ? { ...prev, ...updated } : null));
@@ -208,6 +223,7 @@ export function TimelineGrid({
   };
 
   const handleDeleteScene = async (id: string) => {
+    if (orderPending.current) return;
     try {
       await timelineAction({ action: "deleteScene", id });
       setScenes((prev) => prev.filter((s) => s.id !== id));
@@ -218,6 +234,7 @@ export function TimelineGrid({
   };
 
   const handleArchiveScene = async (id: string) => {
+    if (orderPending.current) return;
     try {
       await timelineAction({ action: "archiveScene", id });
       setScenes((prev) => prev.filter((s) => s.id !== id));
@@ -240,6 +257,7 @@ export function TimelineGrid({
   };
 
   const handleDeleteChapter = async (id: string) => {
+    if (orderPending.current) return;
     try {
       const scenesInChapter = scenes.filter((s) => s.chapter_id === id);
       if (scenesInChapter.length > 0) {
@@ -259,6 +277,7 @@ export function TimelineGrid({
   };
 
   const handleDeletePlotline = async (id: string) => {
+    if (orderPending.current) return;
     try {
       const scenesInPlotline = scenes.filter((s) => s.plotline_id === id);
       if (scenesInPlotline.length > 0) {
@@ -282,8 +301,9 @@ export function TimelineGrid({
     newChapterId: string,
     newPlotlineId: string
   ) => {
+    if (orderPending.current) return;
     try {
-      await timelineAction({
+      const updated = await timelineAction({
         action: "moveScene",
         sceneId,
         chapterId: newChapterId,
@@ -291,15 +311,71 @@ export function TimelineGrid({
         position: 0,
       });
       setScenes((prev) =>
-        prev.map((s) =>
-          s.id === sceneId
-            ? { ...s, chapter_id: newChapterId, plotline_id: newPlotlineId }
-            : s
-        )
+        prev.map((s) => s.id === sceneId ? { ...s, ...updated } : s)
       );
+      setSelectedScene((prev) => prev?.id === sceneId ? { ...prev, ...updated } : prev);
     } catch (e) {
       console.error("Failed to move scene:", e);
     }
+  };
+
+  const reorderCell = async (scene: SceneWithDoc, destination: number) => {
+    if (orderPending.current) return;
+    const cell = getScenesForCell(scene.chapter_id, scene.plotline_id);
+    const from = cell.findIndex((item) => item.id === scene.id);
+    if (from < 0 || destination < 0 || destination >= cell.length || from === destination) return;
+    const ordered = arrayMove(cell, from, destination);
+    const positions = new Map(ordered.map((item, index) => [item.id, index]));
+    orderPending.current = true;
+    setSavingOrder(true);
+    setOrderError(false);
+    setOrderMessage("Saving scene order…");
+    setScenes((prev) => prev.map((item) => positions.has(item.id)
+      ? { ...item, position: positions.get(item.id)! } : item));
+    try {
+      const saved: Scene[] = await timelineAction({ action: "reorderScenes", bookId,
+        chapterId: scene.chapter_id, plotlineId: scene.plotline_id,
+        expectedIds: cell.map((item) => item.id), sceneIds: ordered.map((item) => item.id) });
+      const savedPositions = new Map(saved.map((item) => [item.id, item.position]));
+      setScenes((prev) => prev.map((item) => savedPositions.has(item.id)
+        ? { ...item, position: savedPositions.get(item.id)! } : item));
+      setOrderMessage(`Moved ${scene.title} to position ${destination + 1} of ${cell.length}.`);
+    } catch (error) {
+      // Revert positions only: never overwrite edits made while the save was pending.
+      const priorPositions = new Map(cell.map((item) => [item.id, item.position]));
+      setScenes((prev) => prev.map((item) => priorPositions.has(item.id)
+        ? { ...item, position: priorPositions.get(item.id)! } : item));
+      setOrderError(true);
+      setOrderMessage(error instanceof Error ? error.message : "Could not save scene order.");
+      // A failed response may have committed, or another tab may have changed membership.
+      // Reload authoritative membership and positions before allowing a retry.
+      try {
+        const fresh: SceneWithDoc[] = await timelineAction({ action: "getSceneOrder", bookId });
+        setScenes((prev) => fresh.map((item) => ({
+          ...item, ...prev.find((old) => old.id === item.id),
+          chapter_id: item.chapter_id, plotline_id: item.plotline_id, position: item.position,
+        })));
+      } catch {
+        setOrderMessage("Could not verify scene order. Reload the page before trying again.");
+        return; // Keep ordering locked until a reload resolves uncertain state.
+      }
+    }
+    orderPending.current = false;
+    setSavingOrder(false);
+  };
+
+  const orderControls = (scene: SceneWithDoc) => {
+    const cell = getScenesForCell(scene.chapter_id, scene.plotline_id);
+    const index = cell.findIndex((item) => item.id === scene.id);
+    return { first: index === 0, last: index === cell.length - 1, pending: savingOrder,
+      onMove: (direction: -1 | 1) => { void reorderCell(scene, index + direction); } };
+  };
+
+  // Prefer scene targets inside a cell; an outside pointer is a cancelled drop.
+  const detectCollision: CollisionDetection = (args) => {
+    const hits = args.pointerCoordinates ? pointerWithin(args) : closestCenter(args);
+    const sceneHits = hits.filter((hit) => args.droppableContainers.find((c) => c.id === hit.id)?.data.current?.type === "scene");
+    return sceneHits.length ? sceneHits : hits;
   };
 
   // --- Drag and Drop ---
@@ -314,20 +390,23 @@ export function TimelineGrid({
     if (!over) return;
 
     const overData = over.data?.current;
-    if (overData?.type !== "cell") return;
+    if (orderPending.current || !overData) return;
 
     const sceneId = active.id as string;
     const scene = scenes.find((s) => s.id === sceneId);
     if (!scene) return;
 
-    const { chapterId, plotlineId } = overData as {
-      chapterId: string;
-      plotlineId: string;
-    };
+    const targetScene = overData.type === "scene" ? overData.scene as SceneWithDoc : null;
+    if (!targetScene && overData.type !== "cell") return;
+    const chapterId = targetScene?.chapter_id ?? overData.chapterId as string;
+    const plotlineId = targetScene?.plotline_id ?? overData.plotlineId as string;
 
-    // Only move if the cell changed
-    if (scene.chapter_id === chapterId && scene.plotline_id === plotlineId)
+    if (scene.chapter_id === chapterId && scene.plotline_id === plotlineId) {
+      const cell = getScenesForCell(chapterId, plotlineId);
+      const destination = targetScene ? cell.findIndex((item) => item.id === targetScene.id) : cell.length - 1;
+      void reorderCell(scene, destination);
       return;
+    }
 
     handleMoveScene(sceneId, chapterId, plotlineId);
   };
@@ -339,9 +418,14 @@ export function TimelineGrid({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={detectCollision}
+      onDragCancel={() => setActiveScene(null)}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      <div role={orderError ? "alert" : "status"} aria-live="polite" className={cn("px-4 pt-2 text-sm", orderError ? "text-destructive" : "text-muted-foreground")}>
+        {orderMessage}
+      </div>
       {/* ── Mobile view: chapter accordion ── */}
       <div className="md:hidden flex flex-col gap-4 p-4">
         {/* Plotline legend + add */}
@@ -415,8 +499,8 @@ export function TimelineGrid({
                     </div>
                     <div className="space-y-1.5">
                       {cellScenes.map((scene) => (
+                        <div key={scene.id} className="flex items-center gap-1">
                         <button
-                          key={scene.id}
                           onClick={() => handleSelectScene(scene)}
                           className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
                           style={{ borderLeftColor: plotline.color, borderLeftWidth: "3px" }}
@@ -426,8 +510,11 @@ export function TimelineGrid({
                             <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{scene.summary}</p>
                           )}
                         </button>
+                        <SceneOrderControls title={scene.title} {...orderControls(scene)} />
+                        </div>
                       ))}
                       <button
+                        disabled={savingOrder}
                         onClick={() => handleAddScene(chapter.id, plotline.id)}
                         className="flex w-full items-center gap-1.5 rounded-md border border-dashed border-border/40 px-3 py-1.5 text-xs text-muted-foreground/50 hover:border-primary/50 hover:text-primary"
                       >
@@ -637,16 +724,20 @@ export function TimelineGrid({
                       plotlineId={plotline.id}
                       isOver={false}
                     >
+                      <SortableContext items={cellScenes.map((scene) => scene.id)} strategy={verticalListSortingStrategy}>
                       {cellScenes.map((scene) => (
                         <SceneCard
                           key={scene.id}
                           scene={scene}
                           plotlineColor={plotline.color}
+                          orderControls={orderControls(scene)}
                           hasPromises={sceneIdsWithPromises.has(scene.id)}
                           onClick={() => handleSelectScene(scene)}
                         />
                       ))}
+                      </SortableContext>
                       <button
+                        disabled={savingOrder}
                         onClick={() =>
                           handleAddScene(chapter.id, plotline.id)
                         }
@@ -717,6 +808,7 @@ export function TimelineGrid({
           onDelete={handleDeleteScene}
           onArchive={handleArchiveScene}
           onMove={handleMoveScene}
+          orderingPending={savingOrder}
           onClose={() => setSelectedScene(null)}
           onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
         />
